@@ -15,6 +15,10 @@
 -type content() :: 0 | 1.
 -type neighbours() :: [position()].
 
+-export_type([position/0,
+              dimensions/0,
+              content/0]).
+
 -record(state, { position :: position(),
                  dimensions :: dimensions(),
                  content :: content(),
