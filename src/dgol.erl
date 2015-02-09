@@ -1,7 +1,7 @@
 -module(dgol).
 -behaviour(gen_server).
 
--export([start/3]).
+-export([start_link/3]).
 -export([init/1, 
          handle_call/3, 
          handle_cast/2, 
@@ -12,11 +12,11 @@
 -record(state, {size_x :: pos_integer(),
                 size_y :: pos_integer()}).
 
--spec start(pos_integer(), pos_integer(), [cell:position(), ...]) -> 
-                   {ok, pid()} | 
-                   ignore | 
-                   {error, {already_started, pid()} | term()}.
-start(Xdim, Ydim, InitialCells) ->
+-spec start_link(pos_integer(), pos_integer(), [cell:position(), ...]) -> 
+                        {ok, pid()} | 
+                        ignore | 
+                        {error, {already_started, pid()} | term()}.
+start_link(Xdim, Ydim, InitialCells) ->
     gen_server:start({local, ?MODULE}, ?MODULE, [Xdim, Ydim, InitialCells], []).
 
 %%% OTP gen_server callbacks
