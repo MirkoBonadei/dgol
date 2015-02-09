@@ -1,7 +1,9 @@
 {application, dgol,
  [{description, "Distributed Game of Life with Erlang OTP"}
  ,{vsn, "0.1.0"}
- ,{registered, [dgol, cell_sup]}
+ ,{registered, [dgol_sup
+               ,dgol
+               ,cell_sup]}
  ,{mod, {'dgol_app', []}}
  ,{applications,
    [kernel

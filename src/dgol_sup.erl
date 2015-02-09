@@ -1,35 +1,19 @@
-%%%-------------------------------------------------------------------
-%% @doc dgol top level supervisor.
-%% @end
-%%%-------------------------------------------------------------------
-
 -module(dgol_sup).
 
 -behaviour(supervisor).
 
-%% API
 -export([start_link/0]).
-
-%% Supervisor callbacks
 -export([init/1]).
 
 -define(SERVER, ?MODULE).
 
-%%====================================================================
-%% API functions
-%%====================================================================
-
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
-%%====================================================================
-%% Supervisor callbacks
-%%====================================================================
-
-%% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+    RestartStrategy = {one_for_all, 0, 1},
+    CellSup = {cell_sup, {cell_sup, start_link, []},
+               permanent, infinity, supervisor, [cell_sup]},
+    Children = [CellSup],
+    {ok, {RestartStrategy, Children}}.
 
-%%====================================================================
-%% Internal functions
-%%====================================================================
