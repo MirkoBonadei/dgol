@@ -15,3 +15,19 @@ Open a shell the the last source compiled and in the path
 -----
 
     $ ./rebar3 shell
+
+Starting the application
+------------------------
+```erl
+Erlang/OTP 17 [erts-6.0] [source-07b8f44] [64-bit] [smp:8:8] [async-threads:0] [kernel-poll:false]
+
+Eshell V6.0  (abort with ^G)
+1> application:start(dgol).
+ok
+2> dgol:start(3, 3, [{1, 1}, {1, 2}]).
+{ok,<0.73.0>}
+```
+
+Application overview
+--------------------
+![dgol application](https://github.com/MirkoBonadei/dgol/blob/master/doc/application.png)
