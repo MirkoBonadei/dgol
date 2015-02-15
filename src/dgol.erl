@@ -1,6 +1,7 @@
 -module(dgol).
 -behaviour(gen_server).
 
+-export([start_session/3]).
 -export([start_link/3]).
 -export([init/1, 
          handle_call/3, 
@@ -11,6 +12,18 @@
 
 -record(state, {size_x :: pos_integer(),
                 size_y :: pos_integer()}).
+
+-spec start_session(pos_integer(), pos_integer(), [cell:position(), ...]) ->
+                           supervisor:startchild_ret().
+start_session(Xdim, Ydim, InitialCells) ->
+    case whereis(dgol) of
+        undefined ->
+            supervisor:start_child(dgol_sup, 
+                                   {dgol, {dgol, start_link, [Xdim, Ydim, InitialCells]},
+                                           permanent, 2000, worker, [dgol]});
+        _ ->
+            {error, already_started}
+    end.
 
 -spec start_link(pos_integer(), pos_integer(), [cell:position(), ...]) -> 
                         {ok, pid()} | 
