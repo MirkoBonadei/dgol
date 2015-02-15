@@ -17,7 +17,7 @@
                         ignore | 
                         {error, {already_started, pid()} | term()}.
 start_link(Xdim, Ydim, InitialCells) ->
-    gen_server:start({local, ?MODULE}, ?MODULE, [Xdim, Ydim, InitialCells], []).
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [Xdim, Ydim, InitialCells], []).
 
 %%% OTP gen_server callbacks
 
