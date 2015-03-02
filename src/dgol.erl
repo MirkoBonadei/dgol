@@ -1,7 +1,8 @@
 -module(dgol).
 -behaviour(gen_server).
 
--export([start/3]).
+-export([start_session/3]).
+-export([start_link/3]).
 -export([init/1, 
          handle_call/3, 
          handle_cast/2, 
@@ -12,12 +13,24 @@
 -record(state, {size_x :: pos_integer(),
                 size_y :: pos_integer()}).
 
--spec start(pos_integer(), pos_integer(), [cell:position(), ...]) -> 
-                   {ok, pid()} | 
-                   ignore | 
-                   {error, {already_started, pid()} | term()}.
-start(Xdim, Ydim, InitialCells) ->
-    gen_server:start({local, ?MODULE}, ?MODULE, [Xdim, Ydim, InitialCells], []).
+-spec start_session(pos_integer(), pos_integer(), [cell:position(), ...]) ->
+                           supervisor:startchild_ret().
+start_session(Xdim, Ydim, InitialCells) ->
+    case whereis(dgol) of
+        undefined ->
+            supervisor:start_child(dgol_sup, 
+                                   {dgol, {dgol, start_link, [Xdim, Ydim, InitialCells]},
+                                           permanent, 2000, worker, [dgol]});
+        _ ->
+            {error, already_started}
+    end.
+
+-spec start_link(pos_integer(), pos_integer(), [cell:position(), ...]) -> 
+                        {ok, pid()} | 
+                        ignore | 
+                        {error, {already_started, pid()} | term()}.
+start_link(Xdim, Ydim, InitialCells) ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [Xdim, Ydim, InitialCells], []).
 
 %%% OTP gen_server callbacks
 

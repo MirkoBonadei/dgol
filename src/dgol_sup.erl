@@ -10,6 +10,7 @@
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
+%%% OTP callbacks
 init([]) ->
     RestartStrategy = {one_for_all, 0, 1},
     CellSup = {cell_sup, {cell_sup, start_link, []},
