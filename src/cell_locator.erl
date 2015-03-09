@@ -48,6 +48,7 @@ handle_call({put, Position, Pid}, _From, State) ->
     erlang:monitor(process, Pid),
     UpdatedPids = gb_trees:enter(Position, Pid, State#state.pids),
     UpdatedPositions = gb_trees:enter(Pid, Position, State#state.positions),
+    %% TODO: use pacer to update cell
     {reply, ok, State#state{pids=UpdatedPids
                            ,positions=UpdatedPositions}};
 handle_call(stop, From, State) ->
