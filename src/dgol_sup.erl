@@ -15,6 +15,8 @@ init([]) ->
     RestartStrategy = {one_for_all, 0, 1},
     CellSup = {cell_sup, {cell_sup, start_link, []},
                permanent, infinity, supervisor, [cell_sup]},
-    Children = [CellSup],
+    CellLocator = {cell_locator, {cell_locator, start_link, []},
+                   permanent, 100, worker, [cell_locator]},
+    Children = [CellLocator, CellSup],
     {ok, {RestartStrategy, Children}}.
 
