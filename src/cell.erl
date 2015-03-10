@@ -123,4 +123,8 @@ cell_keeps_the_history_test() ->
     ?assertEqual({cell, {2, 2}, 0, 1}, cell:get(Cell, 0)),
     ?assertEqual({cell, {2, 2}, 1, 0}, cell:get(Cell, 1)).
 
+cell_cannot_predict_the_future_test() ->
+    {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
+    ?assertEqual(future, cell:get(Cell, 1)).
+
 -endif.
