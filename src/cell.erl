@@ -75,15 +75,16 @@ handle_call({get, Time}, _From, State) ->
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State}.
 
-%% TODO: check Time must be equal to State time
-handle_cast({collected, Time, NeighboursAlive}, State) ->
+handle_cast({collected, Time, NeighboursAlive}, State) when Time =:= State#state.time ->
     NextTime = Time + 1,
     NextContent = evolve(State#state.content, NeighboursAlive),
     NextHistory = [{NextTime, NextContent} | State#state.history],
     {noreply, State#state{
                 content=NextContent, 
                 history=NextHistory,
-                time = NextTime}}.
+                time = NextTime}};
+handle_cast({collected, _Time, _NeighboursAlive}, State) ->
+    {noreply, State}.
 
 handle_info(_Request, State) ->
     {noreply, State}.
@@ -126,5 +127,14 @@ cell_keeps_the_history_test() ->
 cell_cannot_predict_the_future_test() ->
     {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
     ?assertEqual(future, cell:get(Cell, 1)).
+
+cell_refuses_collected_in_the_past_or_in_the_future_test() ->
+    {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
+    cell:collected(Cell, 0, 3),
+    ?assertEqual({cell, {2, 2}, 1, 1}, cell:get(Cell, 1)),
+    cell:collected(Cell, 0, 0),
+    ?assertEqual({cell, {2, 2}, 1, 1}, cell:get(Cell, 1)),
+    cell:collected(Cell, 5, 2),
+    ?assertEqual(future, cell:get(Cell, 6)).
 
 -endif.
