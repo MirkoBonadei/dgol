@@ -76,9 +76,9 @@ handle_call(stop, _From, State) ->
     {stop, normal, ok, State}.
 
 %% TODO: check Time must be equal to State time
-handle_cast({collected, Time, _NeighboursAlive}, State) ->
+handle_cast({collected, Time, NeighboursAlive}, State) ->
     NextTime = Time + 1,
-    NextContent = 0,
+    NextContent = evolve(State#state.content, NeighboursAlive),
     NextHistory = [{NextTime, NextContent} | State#state.history],
     {noreply, State#state{
                 content=NextContent, 
@@ -102,6 +102,15 @@ compute_neighbours({X, Y}, {Xdim, Ydim}) ->
         Xa <- lists:seq(X - 1 + Xdim, X + 1 + Xdim),
         Ya <- lists:seq(Y - 1 + Ydim, Y + 1 + Ydim),
         {Xa, Ya} /= {X + Xdim, Y + Ydim}].
+
+-spec evolve(CurrentContent :: content(), NeighboursAlive :: non_neg_integer()) -> 
+                    NextContent :: content().
+evolve(1, 2) ->
+    1;
+evolve(_, 3) ->
+    1;
+evolve(_, _) ->
+    0.
 
 -ifdef(TEST).
 
