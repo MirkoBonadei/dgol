@@ -23,7 +23,9 @@
 
 -export_type([position/0,
               dimensions/0,
-              content/0]).
+              content/0,
+              neighbours/0,
+              time/0]).
 
 -record(state, { position :: position(),
                  dimensions :: dimensions(),
