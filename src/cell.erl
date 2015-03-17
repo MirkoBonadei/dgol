@@ -6,6 +6,7 @@
 -export([start_link/3,
          stop/1,
          get/2, 
+         eventually_get/3,
          collected/3]).
 -export([init/1,
          handle_call/3,
@@ -29,7 +30,8 @@
                  content :: content(),
                  neighbours :: neighbours(),
                  time :: time(),
-                 history :: [{time(), content()}]}).
+                 history :: [{time(), content()}],
+                 future :: [{time(), fun()}]}).
 
 %%% TODO: solve this internal conflict of trying to spec the return values of 
 %%% OTP.
@@ -45,7 +47,8 @@ start_link({X, Y} = Pos, {Xdim, Ydim} = Dim, InitialContent)
                                  content = InitialContent,
                                  neighbours = compute_neighbours(Pos, Dim),
                                  time = 0,
-                                 history = [{0, InitialContent}]},
+                                 history = [{0, InitialContent}],
+                                 future = []},
                          []).
 
 -spec stop(pid()) -> ok.
@@ -55,6 +58,10 @@ stop(Pid) ->
 -spec get(pid(), time()) -> {cell, position(), time(), content()} | future.
 get(Pid, Time) ->
     gen_server:call(Pid, {get, Time}).
+
+-spec eventually_get(pid(), time(), fun()) -> ok.
+eventually_get(Pid, Time, Callback) ->
+    gen_server:cast(Pid, {eventually_get, Time, Callback}).
 
 -spec collected(pid(), time(), non_neg_integer()) -> ok.
 collected(Pid, Time, NeighboursAlive) ->
@@ -79,12 +86,26 @@ handle_cast({collected, Time, NeighboursAlive}, State) when Time =:= State#state
     NextTime = Time + 1,
     NextContent = evolve(State#state.content, NeighboursAlive),
     NextHistory = [{NextTime, NextContent} | State#state.history],
+
+    {KnownFutures, UnknownFutures} = split_known_futures(NextTime, State#state.future),
+    reply_known_futures({cell, State#state.position, NextTime, NextContent}, KnownFutures),
+
     {noreply, State#state{
                 content=NextContent, 
                 history=NextHistory,
+                future=UnknownFutures,
                 time = NextTime}};
 handle_cast({collected, _Time, _NeighboursAlive}, State) ->
-    {noreply, State}.
+    {noreply, State};
+handle_cast({eventually_get, Time, Callback}, State) ->
+    case lists:keyfind(Time, 1, State#state.history) of
+        {Time, Content} ->
+            Callback({cell, State#state.position, Time, Content}),
+            {noreply, State};
+        false ->
+            NextState = State#state{future=[{Time, Callback}|State#state.future]},
+            {noreply, NextState}
+    end.
 
 handle_info(_Request, State) ->
     {noreply, State}.
@@ -113,6 +134,17 @@ evolve(_, 3) ->
 evolve(_, _) ->
     0.
 
+split_known_futures(Time, Futures) ->
+    KnownFutures = lists:filter(fun({FutureTime, _Callback}) ->  FutureTime =:= Time
+                                 end, Futures),
+    UnknownFutures = lists:subtract(Futures, KnownFutures),
+    {KnownFutures, UnknownFutures}.
+
+reply_known_futures(Message, Futures) ->
+    lists:foreach(fun({_Time, Callback}) -> 
+                          Callback(Message)
+                  end, Futures).
+
 -ifdef(TEST).
 
 cell_keeps_the_history_test() ->
@@ -136,5 +168,38 @@ cell_refuses_collected_in_the_past_or_in_the_future_test() ->
     ?assertEqual({cell, {2, 2}, 1, 1}, cell:get(Cell, 1)),
     cell:collected(Cell, 5, 2),
     ?assertEqual(future, cell:get(Cell, 6)).
+
+cell_eventually_get_in_the_past_test() ->
+    Self = self(),
+    {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
+    cell:collected(Cell, 0, 3),
+    cell:collected(Cell, 1, 2),
+    cell:eventually_get(Cell, 0, fun(Result) -> Self ! Result end),
+    assertReceive({cell, {2, 2}, _ExpectedTime = 0, _ExpectedContent = 1}, 50).
+
+cell_eventually_get_in_the_future_test() ->
+    Self = self(),
+    {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
+    cell:eventually_get(Cell, 1, fun(Result) -> Self ! Result end),
+    cell:collected(Cell, 0, 3),
+    assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50).
+
+cell_eventually_get_supports_multiple_requests_test() ->
+    Self = self(),
+    {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
+    cell:eventually_get(Cell, 1, fun(Result) -> Self ! Result end),
+    cell:eventually_get(Cell, 1, fun(Result) -> Self ! Result end),
+    cell:collected(Cell, 0, 3),
+    assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50),
+    assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50).
+
+assertReceive(ExpectedMessage, Timeout) ->
+    receive
+        ReceivedMessage ->
+            ?assertMatch(ExpectedMessage, ReceivedMessage)
+    after Timeout ->
+            ?assertMatch(ExpectedMessage, false)
+    end.
+    
 
 -endif.
