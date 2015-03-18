@@ -27,13 +27,13 @@
               neighbours/0,
               time/0]).
 
--record(state, { position :: position(),
-                 dimensions :: dimensions(),
-                 content :: content(),
-                 neighbours :: neighbours(),
-                 time :: time(),
-                 history :: [{time(), content()}],
-                 future :: [{time(), fun()}]}).
+-record(state, {position :: position(),
+                dimensions :: dimensions(),
+                content :: content(),
+                neighbours :: neighbours(),
+                time :: time(),
+                history :: [{time(), content()}],
+                future :: [{time(), fun()}]}).
 
 %%% TODO: solve this internal conflict of trying to spec the return values of 
 %%% OTP.
@@ -88,7 +88,6 @@ handle_cast({collected, Time, NeighboursAlive}, State) when Time =:= State#state
     NextTime = Time + 1,
     NextContent = evolve(State#state.content, NeighboursAlive),
     NextHistory = [{NextTime, NextContent} | State#state.history],
-
     {KnownFutures, UnknownFutures} = split_known_futures(NextTime, State#state.future),
     reply_known_futures({cell, State#state.position, NextTime, NextContent}, KnownFutures),
 
