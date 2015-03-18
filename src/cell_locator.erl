@@ -102,6 +102,7 @@ location_is_removed_when_monitored_process_goes_down_test() ->
     ?assertEqual(ok, cell_locator:put({1, 2}, Process)),
     exit(Process, kill),
     ?assertNot(erlang:is_process_alive(Process)),
-    ?assertEqual({error, not_found}, cell_locator:get({1, 2})).
+    ?assertEqual({error, not_found}, cell_locator:get({1, 2})),
+    cell_locator:stop().
 
 -endif.
