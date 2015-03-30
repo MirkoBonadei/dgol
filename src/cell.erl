@@ -7,7 +7,8 @@
          stop/1,
          get/2, 
          eventually_get/3,
-         collected/3]).
+         collected/3,
+         evolve/1]).
 -export([init/1,
          handle_call/3,
          handle_cast/2,
@@ -69,6 +70,10 @@ eventually_get(Pid, Time, Callback) ->
 collected(Pid, Time, NeighboursAlive) ->
     gen_server:cast(Pid, {collected, Time, NeighboursAlive}).
 
+-spec evolve(pid()) -> ok.
+evolve(Pid) ->
+    gen_server:cast(Pid, evolve).
+
 %%% OTP gen_server callbacks
 
 init(State) ->
@@ -106,7 +111,17 @@ handle_cast({eventually_get, Time, Callback}, State) ->
         false ->
             NextState = State#state{future=[{Time, Callback}|State#state.future]},
             {noreply, NextState}
-    end.
+    end;
+handle_cast(evolve, State) ->
+    TimeToCollect = State#state.time,
+    Self = self(),
+    {ok, _CollectorPid} = collector:start_link(TimeToCollect,
+                                               State#state.neighbours,
+                                               fun(TimeCollected, NeighboursAlive) when TimeCollected =:= TimeToCollect ->
+                                                       cell:collected(Self, TimeCollected, NeighboursAlive)
+                                               end),
+    {noreply, State}.
+
 
 handle_info(_Request, State) ->
     {noreply, State}.
@@ -200,7 +215,6 @@ assertReceive(ExpectedMessage, Timeout) ->
             ?assertMatch(ExpectedMessage, ReceivedMessage)
     after Timeout ->
             ?assertMatch(ExpectedMessage, false)
-    end.
-    
+    end.    
 
 -endif.

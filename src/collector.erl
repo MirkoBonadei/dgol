@@ -79,7 +79,7 @@ code_change(_OldVsn, State, _Extra) ->
 colletor_is_able_to_collect_neighbours_content_test() ->
     Self = self(),
     {ok, _} = cell_locator:start_link(),
-    {ok, _} = cell_sup:start_link(),
+    {ok, CellSupPid} = cell_sup:start_link(),
     {ok, _} = cell_sup:start_cell({1, 1}, {3, 3}, 1),
     {ok, _} = cell_sup:start_cell({1, 2}, {3, 3}, 0),
     collector:start_link(
@@ -94,6 +94,8 @@ colletor_is_able_to_collect_neighbours_content_test() ->
             ?assertEqual(1, N)
     after 50 ->
             throw(test_failed)
-    end.
+    end,
+    cell_locator:stop(),
+    exit(CellSupPid, normal).
 
 -endif.
