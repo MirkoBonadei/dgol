@@ -1,0 +1,13 @@
+* DGOL todo list
+** TODO setup e tear down implicito
+   - State "TODO"       from ""           [2015-03-30 lun 08:59]
+   Quando facciamo dei test di integrazione siamo costretti sempre a
+   accendere e spegnere cell_locator e cell_sup
+** TODO assertReceive da implementare come macro EUnit
+   - State "TODO"       from ""           [2015-03-30 lun 08:59]
+** TODO [collector] smart handle_info
+   - State "TODO"       from ""           [2015-03-30 lun 09:01]
+   controllare che a fronte di un DOWN terminiamo solo se conosciamo
+   il Ref del DOWN
+** TODO [collector] usa keytake invece che keyfind e subtract
+   - State "TODO"       from ""           [2015-03-30 lun 09:02]
