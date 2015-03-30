@@ -66,7 +66,10 @@ handle_info(timeout, State) ->
                                            cell:eventually_get(CellPid, State#state.time, Callback),
                                            {Position, Ref}
                                    end, NeighboursCoordinates),
-    {noreply, State#state{neighbours_monitors=NeighboursMonitors}}.
+    {noreply, State#state{neighbours_monitors=NeighboursMonitors}};
+handle_info({'DOWN', _Ref, process, _Pid, _Info}, State) ->
+    {stop, give_up, State}.
+
 
 terminate(_Reason, _State) ->
     ok.
