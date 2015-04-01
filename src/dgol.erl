@@ -1,7 +1,8 @@
 -module(dgol).
 -behaviour(gen_server).
 
--export([start_session/3]).
+-export([start_session/3,
+         evolve/0]).
 -export([start_link/3]).
 -export([init/1, 
          handle_call/3, 
@@ -14,7 +15,7 @@
                 size_y :: pos_integer()}).
 
 -spec start_session(pos_integer(), pos_integer(), [cell:position(), ...]) ->
-                           supervisor:startchild_ret().
+                           supervisor:startchild_ret() | {error, already_started}.
 start_session(Xdim, Ydim, InitialCells) ->
     case whereis(dgol) of
         undefined ->
@@ -24,6 +25,10 @@ start_session(Xdim, Ydim, InitialCells) ->
         _ ->
             {error, already_started}
     end.
+
+-spec evolve() -> ok.
+evolve() ->
+    gen_server:cast(?MODULE, evolve).
 
 -spec start_link(pos_integer(), pos_integer(), [cell:position(), ...]) -> 
                         {ok, pid()} | 
@@ -47,6 +52,10 @@ handle_cast({start_cells, Xdim, Ydim, InitialCells}, State) ->
     spawn(fun() -> start_cells(Xdim, Ydim, InitialCells, DgolPid) end),
     {noreply, State};
 handle_cast(init_done, State) ->
+    {noreply, State};
+handle_cast(evolve, State) ->
+    [cell:evolve(cell_locator:get({X, Y})) || X <- lists:seq(0, State#state.size_x - 1),
+                                              Y <- lists:seq(0, State#state.size_y - 1)],
     {noreply, State}.
 
 handle_info(_Request, State) ->
