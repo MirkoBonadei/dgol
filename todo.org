@@ -1,5 +1,6 @@
 * DGOL todo list
-** TODO setup e tear down implicito
+** ONGOING setup e tear down implicito
+   - State "ONGOING"    from "TODO"       [2015-04-01 mer 09:08]
    - State "TODO"       from ""           [2015-03-30 lun 08:59]
    Quando facciamo dei test di integrazione siamo costretti sempre a
    accendere e spegnere cell_locator e cell_sup
@@ -11,3 +12,11 @@
    il Ref del DOWN
 ** TODO [collector] usa keytake invece che keyfind e subtract
    - State "TODO"       from ""           [2015-03-30 lun 09:02]
+** TODO [cell_locator] wait_for(Positions)
+   - State "TODO"       from ""           [2015-04-01 mer 09:09]
+** TODO [dgol] start_session_and_wait/4
+   - State "TODO"       from ""           [2015-04-01 mer 09:19]
+** TODO pacer
+   - State "TODO"       from ""           [2015-04-01 mer 09:19]
+** TODO gen_event
+   - State "TODO"       from ""           [2015-04-01 mer 09:19]
