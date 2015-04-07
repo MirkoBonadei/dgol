@@ -1,6 +1,9 @@
 -module(dgol_tests).
 -include_lib("eunit/include/eunit.hrl").
 
+-export([start_dgol/0
+        ,stop_dgol/1]).
+
 all_tests_test_() ->
     {inorder, {foreach, 
                fun start_dgol/0, 

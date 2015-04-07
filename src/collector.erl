@@ -79,10 +79,15 @@ code_change(_OldVsn, State, _Extra) ->
 
 -ifdef(TEST).
 
-colletor_is_able_to_collect_neighbours_content_test() ->
+all_tests_test_() ->
+    {inorder, {foreach, 
+     fun dgol_tests:start_dgol/0, 
+     fun dgol_tests:stop_dgol/1, 
+     [
+      fun colletor_is_able_to_collect_neighbours_content/0]}}.
+
+colletor_is_able_to_collect_neighbours_content() ->
     Self = self(),
-    {ok, _} = cell_locator:start_link(),
-    {ok, CellSupPid} = cell_sup:start_link(),
     {ok, _} = cell_sup:start_cell({1, 1}, {3, 3}, 1),
     {ok, _} = cell_sup:start_cell({1, 2}, {3, 3}, 0),
     collector:start_link(
@@ -97,8 +102,6 @@ colletor_is_able_to_collect_neighbours_content_test() ->
             ?assertEqual(1, N)
     after 50 ->
             throw(test_failed)
-    end,
-    cell_locator:stop(),
-    exit(CellSupPid, normal).
+    end.
 
 -endif.
