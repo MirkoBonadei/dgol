@@ -87,11 +87,15 @@ handle_cast(_Request, State) ->
     {noreply, State}.
 
 handle_info({'DOWN', _Ref, process, Pid, _Reason}, State) ->
-    {value, Position} = gb_trees:lookup(Pid, State#state.positions),
-    UpdatedPids = gb_trees:delete(Position, State#state.pids),
-    UpdatedPositions = gb_trees:delete(Pid, State#state.positions),
-    {noreply, #state{pids=UpdatedPids
-                    ,positions=UpdatedPositions}}.
+    case gb_trees:lookup(Pid, State#state.positions) of
+        {value, Position} ->
+            UpdatedPids = gb_trees:delete(Position, State#state.pids),
+            UpdatedPositions = gb_trees:delete(Pid, State#state.positions),
+            {noreply, #state{pids=UpdatedPids
+                            ,positions=UpdatedPositions}};
+        none ->
+            {noreply, State}
+    end.
 
 terminate(_Reason, _State) ->
     ok.
@@ -101,25 +105,35 @@ code_change(_OldVsn, State, _Extra) ->
 
 -ifdef(TEST).
 
-not_found_test() ->
-    cell_locator:start_link(),
-    ?assertEqual({error, not_found}, cell_locator:get({1, 2})),
+all_tests_test_() ->
+    {inorder, {foreach, 
+               fun setup_locator/0,
+               fun teardown_locator/1,
+               [
+                fun cell_not_found/0,
+                fun cell_found/0,
+                fun cell_update/0,
+                fun cell_location_is_removed_when_monitored_process_goes_down/0
+               ]}}.
+
+setup_locator() ->
+    cell_locator:start_link().
+
+teardown_locator(_) ->
     cell_locator:stop().
 
-hit_test() ->
-    cell_locator:start_link(),
+cell_not_found() ->
+    ?assertEqual({error, not_found}, cell_locator:get({1, 2})).
+
+cell_found() ->
     cell_locator:put({1, 2}, self()),
-    ?assertEqual(self(), cell_locator:get({1, 2})),
-    cell_locator:stop().
+    ?assertEqual(self(), cell_locator:get({1, 2})).
 
-update_test() ->
-    cell_locator:start_link(),
+cell_update() ->
     ?assertEqual(ok, cell_locator:put({1, 2}, self())),
-    ?assertEqual(ok, cell_locator:put({1, 2}, self())),
-    cell_locator:stop().
+    ?assertEqual(ok, cell_locator:put({1, 2}, self())).
 
-location_is_removed_when_monitored_process_goes_down_test() ->
-    cell_locator:start_link(),
+cell_location_is_removed_when_monitored_process_goes_down() ->
     Process = spawn(fun() ->
                             receive
                                 _ -> ok
@@ -127,7 +141,6 @@ location_is_removed_when_monitored_process_goes_down_test() ->
     ?assertEqual(ok, cell_locator:put({1, 2}, Process)),
     exit(Process, kill),
     ?assertNot(erlang:is_process_alive(Process)),
-    ?assertEqual({error, not_found}, cell_locator:get({1, 2})),
-    cell_locator:stop().
+    ?assertEqual({error, not_found}, cell_locator:get({1, 2})).
 
 -endif.
