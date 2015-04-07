@@ -7,7 +7,8 @@
 -export([start_link/0
         ,stop/0
         ,put/2
-        ,get/1]).
+        ,get/1
+        ,wait_for/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -32,6 +33,18 @@ get(Position) ->
 -spec stop() -> ok.
 stop() ->
     gen_server:call(?SERVER, stop).
+
+-spec wait_for(Position :: cell:position(), Timeout :: timeout()) -> ok | timeout.
+wait_for(_, Timeout) when Timeout =< 0 ->
+    timeout;
+wait_for(Position, Timeout) ->
+    case cell_locator:get(Position) of
+        {error, not_found} -> 
+            timer:sleep(10),
+            cell_locator:wait_for(Position, Timeout - 10);
+        Pid when is_pid(Pid) ->
+            ok
+    end.
 
 init([]) ->
     {ok, #state{pids=gb_trees:empty()

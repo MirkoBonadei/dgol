@@ -12,7 +12,8 @@
    il Ref del DOWN
 ** TODO [collector] usa keytake invece che keyfind e subtract
    - State "TODO"       from ""           [2015-03-30 lun 09:02]
-** TODO [cell_locator] wait_for(Positions)
+** ONGOING [cell_locator] wait_for(Positions)
+   - State "ONGOING"    from "TODO"       [2015-04-07 mar 08:03]
    - State "TODO"       from ""           [2015-04-01 mer 09:09]
 ** TODO [dgol] start_session_and_wait/4
    - State "TODO"       from ""           [2015-04-01 mer 09:19]

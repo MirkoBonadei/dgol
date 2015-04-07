@@ -51,15 +51,12 @@ cells_can_evolve_together() ->
 
 cell_locator_polling([], _) ->
     ok;
-cell_locator_polling(_, 0) ->
-    ko;
-cell_locator_polling(Positions = [H|T], Timeout) ->
-    case cell_locator:get(H) of
-        {error, not_found} -> 
-            timer:sleep(10),
-            cell_locator_polling(Positions, Timeout - 1);
-        Pid when is_pid(Pid) ->
-            cell_locator_polling(T, Timeout)
+cell_locator_polling([H|T], Timeout) ->
+    case cell_locator:wait_for(H, Timeout) of
+        ok ->
+            cell_locator_polling(T, Timeout);
+        timeout ->
+            timeout
     end.
 
 assertReceive(ExpectedMessage, Timeout) ->
