@@ -8,7 +8,8 @@
         ,stop/0
         ,put/2
         ,get/1
-        ,wait_for/2]).
+        ,wait_for/2
+        ,wait_for_all/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -44,6 +45,17 @@ wait_for(Position, Timeout) ->
             cell_locator:wait_for(Position, Timeout - 10);
         Pid when is_pid(Pid) ->
             ok
+    end.
+
+-spec wait_for_all(Positions :: [cell:position(), ...], Timeout :: timeout()) -> ok | timeout.
+wait_for_all([], _) ->
+    ok;
+wait_for_all([H|T], Timeout) ->
+    case cell_locator:wait_for(H, Timeout) of
+        timeout ->
+            timeout;
+        ok ->
+            cell_locator:wait_for_all(T, Timeout)
     end.
 
 init([]) ->

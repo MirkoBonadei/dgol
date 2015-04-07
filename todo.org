@@ -12,10 +12,13 @@
    il Ref del DOWN
 ** TODO [collector] usa keytake invece che keyfind e subtract
    - State "TODO"       from ""           [2015-03-30 lun 09:02]
-** ONGOING [cell_locator] wait_for(Positions)
+** DONE [cell_locator] wait_for(Positions)
+   CLOSED: [2015-04-07 mar 08:30]
    - State "ONGOING"    from "TODO"       [2015-04-07 mar 08:03]
    - State "TODO"       from ""           [2015-04-01 mer 09:09]
-** TODO [dgol] start_session_and_wait/4
+** DONE [dgol] start_session_and_wait/4
+   CLOSED: [2015-04-07 mar 08:30]
+   - State "ONGOING"    from "TODO"       [2015-04-07 mar 08:30]
    - State "TODO"       from ""           [2015-04-01 mer 09:19]
 ** TODO pacer
    - State "TODO"       from ""           [2015-04-01 mer 09:19]

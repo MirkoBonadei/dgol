@@ -20,10 +20,8 @@ stop_dgol(_) ->
 cell_can_collect_number_of_neighbours_alive_for_a_given_time() ->
     Self = self(),
     CellPosition = {2, 2},
-    dgol:start_session(5, 5, [CellPosition]),
-    Positions = [{X, Y} || X <- lists:seq(0, 4),
-                            Y <- lists:seq(0, 4)],
-    ok = cell_locator_polling(Positions, 500),
+    {ok, _} = dgol:start_session_and_wait(5, 5, [CellPosition], 50),
+    
     CellPid = cell_locator:get(CellPosition),
 
     cell:evolve(CellPid),
@@ -34,11 +32,7 @@ cell_can_collect_number_of_neighbours_alive_for_a_given_time() ->
 cells_can_evolve_together() ->
     StepOneLivingCells = [{2, 1}, {2, 2}, {2, 3}],
     StepTwoLivingCells = [{1, 2}, {2, 2}, {3, 2}],
-    dgol:start_session(5, 5, StepOneLivingCells),
-
-    Positions = [{X, Y} || X <- lists:seq(0, 4),
-                            Y <- lists:seq(0, 4)],
-    ok = cell_locator_polling(Positions, 500),
+    {ok, _} = dgol:start_session_and_wait(5, 5, StepOneLivingCells, 50),
 
     ?assertMatch(
        [{_, _, _, 1}, {_, _, _, 1}, {_, _, _, 1}], 
@@ -48,16 +42,6 @@ cells_can_evolve_together() ->
     ?assertMatch(
        [{_, _, _, 1}, {_, _, _, 1}, {_, _, _, 1}], 
        [cell:get(cell_locator:get(Position), 1) || Position <- StepTwoLivingCells]).
-
-cell_locator_polling([], _) ->
-    ok;
-cell_locator_polling([H|T], Timeout) ->
-    case cell_locator:wait_for(H, Timeout) of
-        ok ->
-            cell_locator_polling(T, Timeout);
-        timeout ->
-            timeout
-    end.
 
 assertReceive(ExpectedMessage, Timeout) ->
     receive

@@ -2,7 +2,8 @@
 -behaviour(gen_server).
 
 -export([start_session/3,
-         evolve/0]).
+         evolve/0,
+         start_session_and_wait/4]).
 -export([start_link/3]).
 -export([init/1, 
          handle_call/3, 
@@ -24,6 +25,23 @@ start_session(Xdim, Ydim, InitialCells) ->
                                            permanent, 2000, worker, [dgol]});
         _ ->
             {error, already_started}
+    end.
+
+-spec start_session_and_wait(pos_integer(), pos_integer(), [cell:position(), ...], timeout()) ->
+                           supervisor:startchild_ret() | {error, already_started} | {error, timeout}.
+start_session_and_wait(XDim, YDim, InitialCells, Timeout) ->
+    case dgol:start_session(XDim, YDim, InitialCells) of
+        Error = {error, already_started} ->
+            Error;
+        SupervisorStartChildRet ->
+            Positions = [{X, Y} || X <- lists:seq(0, XDim - 1),
+                                   Y <- lists:seq(0, YDim - 1)],
+            case cell_locator:wait_for_all(Positions, Timeout) of
+                timeout ->
+                    {error, timeout};
+                ok ->
+                    SupervisorStartChildRet
+            end
     end.
 
 -spec evolve() -> ok.
