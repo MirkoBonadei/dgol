@@ -77,6 +77,9 @@ evolve(Pid) ->
 %%% OTP gen_server callbacks
 
 init(State) ->
+    gen_event:notify(deb, {cell_born, 
+                           State#state.position, 
+                           State#state.content}),
     {ok, State}.
 
 handle_call({get, Time}, _From, State) ->
@@ -95,7 +98,11 @@ handle_cast({collected, Time, NeighboursAlive}, State) when Time =:= State#state
     NextHistory = [{NextTime, NextContent} | State#state.history],
     {KnownFutures, UnknownFutures} = split_known_futures(NextTime, State#state.future),
     reply_known_futures({cell, State#state.position, NextTime, NextContent}, KnownFutures),
-
+    gen_event:notify(deb, {cell_evolved, 
+                           State#state.position,
+                           NextContent,
+                           NextTime}),
+    
     {noreply, State#state{
                 content=NextContent, 
                 history=NextHistory,
@@ -129,7 +136,8 @@ handle_info(_Request, State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-terminate(_Reason, _State) ->
+terminate(Reason, State) ->
+    gen_event:notify(deb, {cell_died, State#state.position, Reason}),
     ok.
     
 %%% private functions
@@ -163,7 +171,24 @@ reply_known_futures(Message, Futures) ->
 
 -ifdef(TEST).
 
-cell_keeps_the_history_test() ->
+all_tests_test_() ->
+    {inorder, {foreach, 
+               fun setup/0,
+               fun teardown/1,
+               [fun cell_keeps_the_history/0,
+                fun cell_cannot_predict_the_future/0,
+                fun cell_refuses_collected_in_the_past_or_in_the_future/0,
+                fun cell_eventually_get_in_the_past/0,
+                fun cell_eventually_get_in_the_future/0,
+                fun cell_eventually_get_supports_multiple_requests/0]}}.
+
+setup() ->
+    gen_event:start_link({local, deb}).
+
+teardown(_) ->
+    gen_event:stop(deb).
+
+cell_keeps_the_history() ->
     {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
     ?assertEqual({cell, {2, 2}, 0, 1}, cell:get(Cell, 0)),
     Time = 0,
@@ -172,11 +197,11 @@ cell_keeps_the_history_test() ->
     ?assertEqual({cell, {2, 2}, 0, 1}, cell:get(Cell, 0)),
     ?assertEqual({cell, {2, 2}, 1, 0}, cell:get(Cell, 1)).
 
-cell_cannot_predict_the_future_test() ->
+cell_cannot_predict_the_future() ->
     {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
     ?assertEqual(future, cell:get(Cell, 1)).
 
-cell_refuses_collected_in_the_past_or_in_the_future_test() ->
+cell_refuses_collected_in_the_past_or_in_the_future() ->
     {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
     cell:collected(Cell, 0, 3),
     ?assertEqual({cell, {2, 2}, 1, 1}, cell:get(Cell, 1)),
@@ -185,7 +210,7 @@ cell_refuses_collected_in_the_past_or_in_the_future_test() ->
     cell:collected(Cell, 5, 2),
     ?assertEqual(future, cell:get(Cell, 6)).
 
-cell_eventually_get_in_the_past_test() ->
+cell_eventually_get_in_the_past() ->
     Self = self(),
     {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
     cell:collected(Cell, 0, 3),
@@ -193,14 +218,14 @@ cell_eventually_get_in_the_past_test() ->
     cell:eventually_get(Cell, 0, fun(Result) -> Self ! Result end),
     assertReceive({cell, {2, 2}, _ExpectedTime = 0, _ExpectedContent = 1}, 50).
 
-cell_eventually_get_in_the_future_test() ->
+cell_eventually_get_in_the_future() ->
     Self = self(),
     {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
     cell:eventually_get(Cell, 1, fun(Result) -> Self ! Result end),
     cell:collected(Cell, 0, 3),
     assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50).
 
-cell_eventually_get_supports_multiple_requests_test() ->
+cell_eventually_get_supports_multiple_requests() ->
     Self = self(),
     {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
     cell:eventually_get(Cell, 1, fun(Result) -> Self ! Result end),

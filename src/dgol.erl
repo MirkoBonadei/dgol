@@ -20,6 +20,7 @@
 start_session(Xdim, Ydim, InitialCells) ->
     case whereis(dgol) of
         undefined ->
+            gen_event:notify(deb, {universe_created, Xdim, Ydim}),
             supervisor:start_child(dgol_sup, 
                                    {dgol, {dgol, start_link, [Xdim, Ydim, InitialCells]},
                                            permanent, 2000, worker, [dgol]});

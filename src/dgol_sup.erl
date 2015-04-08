@@ -7,8 +7,18 @@
 
 -define(SERVER, ?MODULE).
 
+-ifndef(TEST).
+-define(TEST, false).
+-endif.
+
 start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+    {ok, Pid} = supervisor:start_link({local, ?SERVER}, ?MODULE, []),
+    case ?TEST of  
+        false -> ok = gen_event:add_handler(deb, ui, []),
+                 {ok, Pid};
+        true ->
+            {ok, Pid}
+    end.
 
 %%% OTP callbacks
 init([]) ->
@@ -17,6 +27,9 @@ init([]) ->
                permanent, infinity, supervisor, [cell_sup]},
     CellLocator = {cell_locator, {cell_locator, start_link, []},
                    permanent, 100, worker, [cell_locator]},
-    Children = [CellLocator, CellSup],
+    DomainEventBus = {deb, {gen_event, start_link, [{local, deb}]},
+                      permanent, 1000, worker, [dynamic]},
+
+    Children = [DomainEventBus, CellLocator, CellSup],
     {ok, {RestartStrategy, Children}}.
 
