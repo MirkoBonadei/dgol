@@ -21,13 +21,18 @@
    CLOSED: [2015-04-07 mar 08:30]
    - State "ONGOING"    from "TODO"       [2015-04-07 mar 08:30]
    - State "TODO"       from ""           [2015-04-01 mer 09:19]
-** TODO pacer
-   - State "TODO"       from ""           [2015-04-01 mer 09:19]
 ** ONGOING gen_event
    - State "ONGOING"    from "TODO"       [2015-04-08 mer 08:49]
    - State "TODO"       from ""           [2015-04-01 mer 09:19]
-   Usiamo meck per mockare il gen_event in fase di test oppure ne
-   avviamo uno per ogni test?
    Non stiamo ricevendo l'evento `cell_died` perchè non viene
    invocata la terminate in caso una cella muoia. Può farlo il
-   supervisor con un hook? Oppure possiamo farlo con il `cell_locator`.
+   supervisor con un hook? Oppure possiamo farlo con il
+   `cell_locator`.
+** TODO refactoring (extract cell:collect) to spawn collector
+   - State "TODO"       from ""           [2015-04-14 mar 09:11]
+** TODO remove evolve in cell and dgol
+   - State "TODO"       from ""           [2015-04-14 mar 09:12]
+** TODO cell died scenario (cell must recover after that)
+   - State "TODO"       from ""           [2015-04-14 mar 09:13]
+** TODO questions to Torben
+   - State "TODO"       from ""           [2015-04-14 mar 09:14]

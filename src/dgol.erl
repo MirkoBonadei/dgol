@@ -3,6 +3,7 @@
 
 -export([start_session/3,
          evolve/0,
+         evolve_at/1,
          start_session_and_wait/4]).
 -export([start_link/3]).
 -export([init/1, 
@@ -49,6 +50,10 @@ start_session_and_wait(XDim, YDim, InitialCells, Timeout) ->
 evolve() ->
     gen_server:cast(?MODULE, evolve).
 
+-spec evolve_at(cell:time()) -> ok.
+evolve_at(Time) ->
+    gen_server:cast(?MODULE, {evolve_at, Time}).
+
 -spec start_link(pos_integer(), pos_integer(), [cell:position(), ...]) -> 
                         {ok, pid()} | 
                         ignore | 
@@ -75,6 +80,10 @@ handle_cast(init_done, State) ->
 handle_cast(evolve, State) ->
     [cell:evolve(cell_locator:get({X, Y})) || X <- lists:seq(0, State#state.size_x - 1),
                                               Y <- lists:seq(0, State#state.size_y - 1)],
+    {noreply, State};
+handle_cast({evolve_at, Time}, State) ->
+    [cell:evolve_at(cell_locator:get({X, Y}), Time) || X <- lists:seq(0, State#state.size_x - 1),
+                                                       Y <- lists:seq(0, State#state.size_y - 1)],
     {noreply, State}.
 
 handle_info(_Request, State) ->

@@ -8,7 +8,8 @@
          get/2, 
          eventually_get/3,
          collected/3,
-         evolve/1]).
+         evolve/1,
+         evolve_at/2]).
 -export([init/1,
          handle_call/3,
          handle_cast/2,
@@ -33,6 +34,7 @@
                 content :: content(),
                 neighbours :: neighbours(),
                 time :: time(),
+                target_time :: time(),
                 history :: [{time(), content()}],
                 future :: [{time(), fun()}]}).
 
@@ -50,6 +52,7 @@ start_link({X, Y} = Pos, {Xdim, Ydim} = Dim, InitialContent)
                                  content = InitialContent,
                                  neighbours = compute_neighbours(Pos, Dim),
                                  time = 0,
+                                 target_time=0,
                                  history = [{0, InitialContent}],
                                  future = []},
                          []).
@@ -73,6 +76,10 @@ collected(Pid, Time, NeighboursAlive) ->
 -spec evolve(pid()) -> ok.
 evolve(Pid) ->
     gen_server:cast(Pid, evolve).
+
+-spec evolve_at(pid(), time()) -> ok.
+evolve_at(Pid, Time) ->
+    gen_server:cast(Pid, {evolve_at, Time}).
 
 %%% OTP gen_server callbacks
 
@@ -102,12 +109,25 @@ handle_cast({collected, Time, NeighboursAlive}, State) when Time =:= State#state
                            State#state.position,
                            NextContent,
                            NextTime}),
+    TargetTime = case State#state.target_time > NextTime of
+        true ->
+            Self = self(),
+            {ok, _CollectorPid} = collector:start_link(NextTime,
+                                                       State#state.neighbours,
+                                                       fun(TimeCollected, NeighboursAlive2) when TimeCollected =:= NextTime ->
+                                                               cell:collected(Self, TimeCollected, NeighboursAlive2)
+                                                       end),
+                         State#state.target_time;
+        _ -> 
+            State#state.time
+    end,
     
     {noreply, State#state{
                 content=NextContent, 
                 history=NextHistory,
                 future=UnknownFutures,
-                time = NextTime}};
+                time = NextTime,
+                target_time=TargetTime}};
 handle_cast({collected, _Time, _NeighboursAlive}, State) ->
     {noreply, State};
 handle_cast({eventually_get, Time, Callback}, State) ->
@@ -127,8 +147,22 @@ handle_cast(evolve, State) ->
                                                fun(TimeCollected, NeighboursAlive) when TimeCollected =:= TimeToCollect ->
                                                        cell:collected(Self, TimeCollected, NeighboursAlive)
                                                end),
-    {noreply, State}.
-
+    {noreply, State};
+handle_cast({evolve_at, Time}, State) when Time =< State#state.time ->
+    gen_event:notify(deb, {already_evolved, 
+                           State#state.position, 
+                           State#state.content,
+                           Time}),
+    {noreply, State};
+handle_cast({evolve_at, Time}, State) ->
+    TimeToCollect = State#state.time,
+    Self = self(),
+    {ok, _CollectorPid} = collector:start_link(TimeToCollect,
+                                               State#state.neighbours,
+                                               fun(TimeCollected, NeighboursAlive) when TimeCollected =:= TimeToCollect ->
+                                                       cell:collected(Self, TimeCollected, NeighboursAlive)
+                                               end),
+    {noreply, State#state{target_time=Time}}.
 
 handle_info(_Request, State) ->
     {noreply, State}.
