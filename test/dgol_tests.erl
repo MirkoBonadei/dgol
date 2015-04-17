@@ -73,7 +73,7 @@ cells_can_evolve_together() ->
     ?assertMatch(
        [{_, _, _, 1}, {_, _, _, 1}, {_, _, _, 1}], 
        [cell:get(cell_locator:get(Position), 0) || Position <- StepOneLivingCells]),
-    dgol:evolve(),
+    dgol:evolve_at(1),
     timer:sleep(500),
     ?assertMatch(
        [{_, _, _, 1}, {_, _, _, 1}, {_, _, _, 1}], 

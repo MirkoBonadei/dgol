@@ -28,9 +28,13 @@
    invocata la terminate in caso una cella muoia. Può farlo il
    supervisor con un hook? Oppure possiamo farlo con il
    `cell_locator`.
-** TODO refactoring (extract cell:collect) to spawn collector
+** DONE refactoring (extract cell:collect) to spawn collector
+   CLOSED: [2015-04-17 ven 08:32]
+   - State "ONGOING"    from "TODO"       [2015-04-17 ven 08:32]
    - State "TODO"       from ""           [2015-04-14 mar 09:11]
-** TODO remove evolve in cell and dgol
+** DONE remove evolve in cell and dgol
+   CLOSED: [2015-04-17 ven 08:37]
+   - State "ONGOING"    from "TODO"       [2015-04-17 ven 08:37]
    - State "TODO"       from ""           [2015-04-14 mar 09:12]
 ** TODO cell died scenario (cell must recover after that)
    - State "TODO"       from ""           [2015-04-14 mar 09:13]

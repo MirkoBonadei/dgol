@@ -2,7 +2,6 @@
 -behaviour(gen_server).
 
 -export([start_session/3,
-         evolve/0,
          evolve_at/1,
          start_session_and_wait/4]).
 -export([start_link/3]).
@@ -46,10 +45,6 @@ start_session_and_wait(XDim, YDim, InitialCells, Timeout) ->
             end
     end.
 
--spec evolve() -> ok.
-evolve() ->
-    gen_server:cast(?MODULE, evolve).
-
 -spec evolve_at(cell:time()) -> ok.
 evolve_at(Time) ->
     gen_server:cast(?MODULE, {evolve_at, Time}).
@@ -76,10 +71,6 @@ handle_cast({start_cells, Xdim, Ydim, InitialCells}, State) ->
     spawn(fun() -> start_cells(Xdim, Ydim, InitialCells, DgolPid) end),
     {noreply, State};
 handle_cast(init_done, State) ->
-    {noreply, State};
-handle_cast(evolve, State) ->
-    [cell:evolve(cell_locator:get({X, Y})) || X <- lists:seq(0, State#state.size_x - 1),
-                                              Y <- lists:seq(0, State#state.size_y - 1)],
     {noreply, State};
 handle_cast({evolve_at, Time}, State) ->
     [cell:evolve_at(cell_locator:get({X, Y}), Time) || X <- lists:seq(0, State#state.size_x - 1),

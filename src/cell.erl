@@ -8,7 +8,6 @@
          get/2, 
          eventually_get/3,
          collected/3,
-         evolve/1,
          evolve_at/2]).
 -export([init/1,
          handle_call/3,
@@ -73,10 +72,6 @@ eventually_get(Pid, Time, Callback) ->
 collected(Pid, Time, NeighboursAlive) ->
     gen_server:cast(Pid, {collected, Time, NeighboursAlive}).
 
--spec evolve(pid()) -> ok.
-evolve(Pid) ->
-    gen_server:cast(Pid, evolve).
-
 -spec evolve_at(pid(), time()) -> ok.
 evolve_at(Pid, Time) ->
     gen_server:cast(Pid, {evolve_at, Time}).
@@ -135,11 +130,6 @@ handle_cast({eventually_get, Time, Callback}, State) ->
             NextState = State#state{future=[{Time, Callback}|State#state.future]},
             {noreply, NextState}
     end;
-handle_cast(evolve, State) ->
-    TimeToCollect = State#state.time,
-    NeighboursPositions = State#state.neighbours,
-    collect(TimeToCollect, NeighboursPositions),
-    {noreply, State};
 handle_cast({evolve_at, Time}, State) when Time =< State#state.time ->
     gen_event:notify(deb, {already_evolved, 
                            State#state.position, 
