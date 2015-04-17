@@ -110,18 +110,14 @@ handle_cast({collected, Time, NeighboursAlive}, State) when Time =:= State#state
                            NextContent,
                            NextTime}),
     TargetTime = case State#state.target_time > NextTime of
-        true ->
-            Self = self(),
-            {ok, _CollectorPid} = collector:start_link(NextTime,
-                                                       State#state.neighbours,
-                                                       fun(TimeCollected, NeighboursAlive2) when TimeCollected =:= NextTime ->
-                                                               cell:collected(Self, TimeCollected, NeighboursAlive2)
-                                                       end),
+                     true ->
+                         TimeToCollect = NextTime,
+                         NeighboursPositions = State#state.neighbours,
+                         collect(TimeToCollect, NeighboursPositions),
                          State#state.target_time;
-        _ -> 
-            State#state.time
-    end,
-    
+                     _ -> 
+                         State#state.time
+                 end,
     {noreply, State#state{
                 content=NextContent, 
                 history=NextHistory,
@@ -141,12 +137,8 @@ handle_cast({eventually_get, Time, Callback}, State) ->
     end;
 handle_cast(evolve, State) ->
     TimeToCollect = State#state.time,
-    Self = self(),
-    {ok, _CollectorPid} = collector:start_link(TimeToCollect,
-                                               State#state.neighbours,
-                                               fun(TimeCollected, NeighboursAlive) when TimeCollected =:= TimeToCollect ->
-                                                       cell:collected(Self, TimeCollected, NeighboursAlive)
-                                               end),
+    NeighboursPositions = State#state.neighbours,
+    collect(TimeToCollect, NeighboursPositions),
     {noreply, State};
 handle_cast({evolve_at, Time}, State) when Time =< State#state.time ->
     gen_event:notify(deb, {already_evolved, 
@@ -156,12 +148,8 @@ handle_cast({evolve_at, Time}, State) when Time =< State#state.time ->
     {noreply, State};
 handle_cast({evolve_at, Time}, State) ->
     TimeToCollect = State#state.time,
-    Self = self(),
-    {ok, _CollectorPid} = collector:start_link(TimeToCollect,
-                                               State#state.neighbours,
-                                               fun(TimeCollected, NeighboursAlive) when TimeCollected =:= TimeToCollect ->
-                                                       cell:collected(Self, TimeCollected, NeighboursAlive)
-                                               end),
+    NeighboursPositions = State#state.neighbours,
+    collect(TimeToCollect, NeighboursPositions),
     {noreply, State#state{target_time=Time}}.
 
 handle_info(_Request, State) ->
@@ -202,6 +190,16 @@ reply_known_futures(Message, Futures) ->
     lists:foreach(fun({_Time, Callback}) -> 
                           Callback(Message)
                   end, Futures).
+
+-spec collect(TimeToCollect :: time(), NeighboursPositions :: [position(), ...]) -> ok.
+collect(TimeToCollect, NeighboursPositions) ->
+    Self = self(),
+    {ok, _CollectorPid} = collector:start_link(TimeToCollect,
+                                               NeighboursPositions,
+                                               fun(TimeCollected, NeighboursAlive) when TimeCollected =:= TimeToCollect ->
+                                                       cell:collected(Self, TimeCollected, NeighboursAlive)
+                                               end),
+    ok.
 
 -ifdef(TEST).
 

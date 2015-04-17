@@ -34,5 +34,12 @@
    - State "TODO"       from ""           [2015-04-14 mar 09:12]
 ** TODO cell died scenario (cell must recover after that)
    - State "TODO"       from ""           [2015-04-14 mar 09:13]
+   A che tempo facciamo evolvere la cella quando rinasce?
+   Sembra che dopo la registrazione sul cell_locator abbiamo la
+   possibilità di richiedere il target time universale essendo sicuri
+   che ogni richiesta di evoluzione successiva risulti in un
+   messaggio nella mailbox del processo appena nato. Così facendo
+   forse possiamo eliminare l'avvio sincrono dell'universo.
+   Chi deve dare la direttiva di "run until"?
 ** TODO questions to Torben
    - State "TODO"       from ""           [2015-04-14 mar 09:14]
