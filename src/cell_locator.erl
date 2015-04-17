@@ -73,9 +73,8 @@ handle_call({put, Position, Pid}, _From, State) ->
     erlang:monitor(process, Pid),
     UpdatedPids = gb_trees:enter(Position, Pid, State#state.pids),
     UpdatedPositions = gb_trees:enter(Pid, Position, State#state.positions),
-    %% TODO: use pacer to update cell
-    {reply, ok, State#state{pids=UpdatedPids
-                           ,positions=UpdatedPositions}};
+    {reply, ok, State#state{pids=UpdatedPids,
+                            positions=UpdatedPositions}};
 handle_call(stop, From, State) ->
     %% synch termination can only be done with a sync reply handled by the 
     %% user
@@ -91,6 +90,7 @@ handle_info({'DOWN', _Ref, process, Pid, _Reason}, State) ->
         {value, Position} ->
             UpdatedPids = gb_trees:delete(Position, State#state.pids),
             UpdatedPositions = gb_trees:delete(Pid, State#state.positions),
+            gen_event:notify(deb, {cell_died, Position}),
             {noreply, #state{pids=UpdatedPids
                             ,positions=UpdatedPositions}};
         none ->
@@ -117,30 +117,32 @@ all_tests_test_() ->
                ]}}.
 
 setup_locator() ->
+    gen_event:start_link({local, deb}),
     cell_locator:start_link().
 
 teardown_locator(_) ->
+    gen_event:stop(deb),
     cell_locator:stop().
 
 cell_not_found() ->
     ?assertEqual({error, not_found}, cell_locator:get({1, 2})).
 
 cell_found() ->
-    cell_locator:put({1, 2}, self()),
-    ?assertEqual(self(), cell_locator:get({1, 2})).
+    {ok, CellPid} = cell:start_link({1, 2}, {3, 3}, 1),
+    cell_locator:put({1, 2}, CellPid),
+    ?assertEqual(CellPid, cell_locator:get({1, 2})).
 
 cell_update() ->
-    ?assertEqual(ok, cell_locator:put({1, 2}, self())),
-    ?assertEqual(ok, cell_locator:put({1, 2}, self())).
+    {ok, CellPid} = cell:start_link({1, 2}, {3, 3}, 1),
+    ?assertEqual(ok, cell_locator:put({1, 2}, CellPid)),
+    ?assertEqual(ok, cell_locator:put({1, 2}, CellPid)).
 
 cell_location_is_removed_when_monitored_process_goes_down() ->
-    Process = spawn(fun() ->
-                            receive
-                                _ -> ok
-                            end end),
-    ?assertEqual(ok, cell_locator:put({1, 2}, Process)),
-    exit(Process, kill),
-    ?assertNot(erlang:is_process_alive(Process)),
+    process_flag(trap_exit, true),
+    {ok, CellPid} = cell:start_link({1, 2}, {3, 3}, 1),
+    ?assertEqual(ok, cell_locator:put({1, 2}, CellPid)),
+    exit(CellPid, kill),
+    ?assertNot(erlang:is_process_alive(CellPid)),
     ?assertEqual({error, not_found}, cell_locator:get({1, 2})).
 
 -endif.

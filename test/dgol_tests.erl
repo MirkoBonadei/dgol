@@ -12,7 +12,8 @@ all_tests_test_() ->
                 fun cell_can_evolve_at_next_time/0,
                 fun cells_can_evolve_together/0,
                 fun cell_does_not_evolve_when_already_evolved/0,
-                fun cell_can_evolve_at_future_time/0]}}.
+                fun cell_can_evolve_at_future_time/0,
+                fun events_about_cells_are_emitted_correctly/0]}}.
 
 start_dgol() ->
     application:start(dgol),
@@ -78,6 +79,13 @@ cells_can_evolve_together() ->
     ?assertMatch(
        [{_, _, _, 1}, {_, _, _, 1}, {_, _, _, 1}], 
        [cell:get(cell_locator:get(Position), 1) || Position <- StepTwoLivingCells]).
+
+events_about_cells_are_emitted_correctly() ->
+    {ok, _} = dgol:start_session_and_wait(5, 5, [{1,1}], 50),
+    exit(cell_locator:get({1, 1}), test),
+    timer:sleep(500),
+    ?assert(recorder:is_recorded({cell_born, {1, 1}, 1}, 2)),
+    ?assert(recorder:is_recorded({cell_died, {1, 1}})).
 
 assertReceive(ExpectedMessage, Timeout) ->
     receive
