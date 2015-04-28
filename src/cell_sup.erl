@@ -11,12 +11,10 @@ start_link() ->
 -spec start_cell(cell:position(), cell:dimensions(), cell:content()) -> 
                         supervisor:startchild_ret().
 start_cell(Position, Dimensions, InitialContent) ->
-    {ok, Pid} = Res = supervisor:start_child(?MODULE,
-                                             child_spec(Position,
-                                                        Dimensions,
-                                                        InitialContent)),
-    cell_locator:put(Position, Pid),
-    Res.
+    {ok, _} = supervisor:start_child(?MODULE,
+                                     child_spec(Position,
+                                                Dimensions,
+                                                InitialContent)).
 
 %%% OTP supervisor callback
 

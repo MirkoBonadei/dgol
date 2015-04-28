@@ -79,6 +79,7 @@ evolve_at(Pid, Time) ->
 %%% OTP gen_server callbacks
 
 init(State) ->
+    cell_locator:put(State#state.position, self()),
     gen_event:notify(deb, {cell_born, 
                            State#state.position, 
                            State#state.content}),
@@ -205,6 +206,7 @@ all_tests_test_() ->
                 fun cell_eventually_get_supports_multiple_requests/0]}}.
 
 setup() ->
+    cell_locator:start_link(),
     gen_event:start_link({local, deb}).
 
 teardown(_) ->
