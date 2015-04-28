@@ -23,6 +23,9 @@ init(_) ->
 
 handle_event({cell_evolved, _, _, Time}, State) when Time > State#state.time ->
     {ok, State#state{time=Time}};
+handle_event({cell_born, Pos, _Content}, State) ->
+    cell:evolve_at(cell_locator:get(Pos), dgol:target_time()),
+    {ok, State};
 handle_event(_, State) ->
     {ok, State}.
 
@@ -45,7 +48,7 @@ clock_works_test() ->
     gen_event:add_handler(deb, clock, []),
 
     ?assertEqual(0, clock:get_time()),
-    gen_event:notify(deb, {cell_born, {1, 1}, 1, 0}),
+    %%gen_event:notify(deb, {cell_born, {1, 1}, 1}),
     ?assertEqual(0, clock:get_time()),
     gen_event:notify(deb, {cell_evolved, {1, 1}, 1, 1}),
     ?assertEqual(1, clock:get_time()),

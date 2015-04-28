@@ -79,10 +79,20 @@ code_change(_OldVsn, State, _Extra) ->
 
 -ifdef(TEST).
 
+start_dgol() ->
+    application:start(dgol),
+    gen_event:add_handler(deb, recorder, []).
+
+stop_dgol(_) ->
+    error_logger:tty(false),
+    gen_event:delete_handler(deb, clock, []),
+    application:stop(dgol),
+    error_logger:tty(true).
+
 all_tests_test_() ->
     {inorder, {foreach, 
-     fun dgol_tests:start_dgol/0, 
-     fun dgol_tests:stop_dgol/1, 
+     fun start_dgol/0, 
+     fun stop_dgol/1, 
      [
       fun colletor_is_able_to_collect_neighbours_content/0]}}.
 

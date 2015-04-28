@@ -3,7 +3,8 @@
 
 -export([start_session/3,
          evolve_at/1,
-         start_session_and_wait/4]).
+         start_session_and_wait/4,
+         target_time/0]).
 -export([start_link/3]).
 -export([init/1, 
          handle_call/3, 
@@ -13,7 +14,8 @@
          code_change/3]).
 
 -record(state, {size_x :: pos_integer(),
-                size_y :: pos_integer()}).
+                size_y :: pos_integer(),
+                target_time :: non_neg_integer()}).
 
 -spec start_session(pos_integer(), pos_integer(), [cell:position(), ...]) ->
                            supervisor:startchild_ret() | {error, already_started}.
@@ -56,15 +58,20 @@ evolve_at(Time) ->
 start_link(Xdim, Ydim, InitialCells) ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [Xdim, Ydim, InitialCells], []).
 
+-spec target_time() -> non_neg_integer().
+target_time() ->
+    gen_server:call(?MODULE, target_time).
+
 %%% OTP gen_server callbacks
 
 init([Xdim, Ydim, InitialCells]) ->
     gen_server:cast(self(), {start_cells, Xdim, Ydim, InitialCells}),
     {ok, #state{size_x = Xdim,
-                size_y = Ydim}}.
+                size_y = Ydim,
+                target_time = 0}}.
 
-handle_call(_Request, _From, State) ->
-    {noreply, State}.
+handle_call(target_time, _From, State) ->
+    {reply, State#state.target_time, State}.
 
 handle_cast({start_cells, Xdim, Ydim, InitialCells}, State) ->
     DgolPid = self(),
@@ -75,7 +82,7 @@ handle_cast(init_done, State) ->
 handle_cast({evolve_at, Time}, State) ->
     [cell:evolve_at(cell_locator:get({X, Y}), Time) || X <- lists:seq(0, State#state.size_x - 1),
                                                        Y <- lists:seq(0, State#state.size_y - 1)],
-    {noreply, State}.
+    {noreply, State#state{target_time=Time}}.
 
 handle_info(_Request, State) ->
     {noreply, State}.

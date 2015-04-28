@@ -7,6 +7,8 @@
    accendere e spegnere cell_locator e cell_sup
 ** TODO assertReceive da implementare come macro EUnit
    - State "TODO"       from ""           [2015-03-30 lun 08:59]
+** TODO assert di eunit con timeout
+   - State "TODO"       from ""           [2015-04-28 mar 09:27]
 ** TODO [collector] smart handle_info
    - State "TODO"       from ""           [2015-03-30 lun 09:01]
    controllare che a fronte di un DOWN terminiamo solo se conosciamo
@@ -21,7 +23,8 @@
    CLOSED: [2015-04-07 mar 08:30]
    - State "ONGOING"    from "TODO"       [2015-04-07 mar 08:30]
    - State "TODO"       from ""           [2015-04-01 mer 09:19]
-** ONGOING gen_event
+** DONE gen_event
+   CLOSED: [2015-04-28 mar 08:18]
    - State "ONGOING"    from "TODO"       [2015-04-08 mer 08:49]
    - State "TODO"       from ""           [2015-04-01 mer 09:19]
    Non stiamo ricevendo l'evento `cell_died` perchè non viene
@@ -36,7 +39,9 @@
    CLOSED: [2015-04-17 ven 08:37]
    - State "ONGOING"    from "TODO"       [2015-04-17 ven 08:37]
    - State "TODO"       from ""           [2015-04-14 mar 09:12]
-** TODO cell died scenario (cell must recover after that)
+** DONE cell died scenario (cell must recover after that)
+   CLOSED: [2015-04-28 mar 09:23]
+   - State "ONGOING"    from "TODO"       [2015-04-28 mar 09:23]
    - State "TODO"       from ""           [2015-04-14 mar 09:13]
    A che tempo facciamo evolvere la cella quando rinasce?
    Sembra che dopo la registrazione sul cell_locator abbiamo la
@@ -45,5 +50,15 @@
    messaggio nella mailbox del processo appena nato. Così facendo
    forse possiamo eliminare l'avvio sincrono dell'universo.
    Chi deve dare la direttiva di "run until"?
-** TODO questions to Torben
+** DONE questions to Torben
+   CLOSED: [2015-04-28 mar 07:54]
+   - State "ONGOING"    from "TODO"       [2015-04-28 mar 07:54]
    - State "TODO"       from ""           [2015-04-14 mar 09:14]
+** TODO serve ancora avere un clock globale?
+   - State "TODO"       from ""           [2015-04-28 mar 08:22]
+** TODO buttare via il clock e gestire con un altro handler la cell_born
+   - State "TODO"       from ""           [2015-04-28 mar 09:25]
+** TODO gestire il caso in cui dopo un cell_born non troviamo la cella nel cell_locator
+   - State "TODO"       from ""           [2015-04-28 mar 09:25]
+** TODO ri-organizzare i test/dipendenze (a volte forse servirebbe Meck)
+   - State "TODO"       from ""           [2015-04-28 mar 09:25]

@@ -13,14 +13,18 @@ all_tests_test_() ->
                 fun cells_can_evolve_together/0,
                 fun cell_does_not_evolve_when_already_evolved/0,
                 fun cell_can_evolve_at_future_time/0,
-                fun events_about_cells_are_emitted_correctly/0]}}.
+                fun events_about_cells_are_emitted_correctly/0,
+                fun cell_register_itself_after_the_rebirth/0,
+                fun cell_can_recover_after_death/0]}}.
 
 start_dgol() ->
     application:start(dgol),
-    gen_event:add_handler(deb, recorder, []).
+    gen_event:add_handler(deb, recorder, []),
+    gen_event:add_handler(deb, clock, []).
 
 stop_dgol(_) ->
     error_logger:tty(false),
+    gen_event:delete_handler(deb, clock, []),
     application:stop(dgol),
     error_logger:tty(true).
 
@@ -86,6 +90,25 @@ events_about_cells_are_emitted_correctly() ->
     timer:sleep(500),
     ?assert(recorder:is_recorded({cell_born, {1, 1}, 1}, 2)),
     ?assert(recorder:is_recorded({cell_died, {1, 1}})).
+
+cell_register_itself_after_the_rebirth() ->
+    {ok, _} = dgol:start_session_and_wait(5, 5, [{1,1}], 50),
+    OldPid = cell_locator:get({1, 1}),
+    exit(OldPid, test),
+    timer:sleep(500),
+    NewPid = cell_locator:get({1, 1}),
+    ?assert(is_pid(NewPid)),
+    ?assert(OldPid =/= NewPid).
+
+cell_can_recover_after_death() ->
+    {ok, _} = dgol:start_session_and_wait(5, 5, [], 50),
+    dgol:evolve_at(5),
+    ?assertEqual(5, dgol:target_time()),
+    timer:sleep(500),
+    ?assert(recorder:is_recorded({cell_evolved, {1, 1}, 0, 5}, 1)),
+    exit(cell_locator:get({1, 1}), test),
+    timer:sleep(500),
+    ?assert(recorder:is_recorded({cell_evolved, {1, 1}, 0, 5}, 2)).
 
 assertReceive(ExpectedMessage, Timeout) ->
     receive
