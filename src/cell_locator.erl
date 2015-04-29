@@ -117,10 +117,13 @@ all_tests_test_() ->
                ]}}.
 
 setup_locator() ->
+    meck:new(dgol),
+    meck:expect(dgol, target_time, fun() -> 0 end),
     gen_event:start_link({local, deb}),
     cell_locator:start_link().
 
 teardown_locator(_) ->
+    meck:unload(dgol),
     gen_event:stop(deb),
     cell_locator:stop().
 

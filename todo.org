@@ -54,11 +54,22 @@
    CLOSED: [2015-04-28 mar 07:54]
    - State "ONGOING"    from "TODO"       [2015-04-28 mar 07:54]
    - State "TODO"       from ""           [2015-04-14 mar 09:14]
-** TODO serve ancora avere un clock globale?
+** DONE serve ancora avere un clock globale?
+   CLOSED: [2015-04-29 mer 08:52]
+   - State "ONGOING"    from "TODO"       [2015-04-29 mer 08:52]
    - State "TODO"       from ""           [2015-04-28 mar 08:22]
-** TODO buttare via il clock e gestire con un altro handler la cell_born
+** DONE buttare via il clock e gestire con un altro handler la cell_born
+   CLOSED: [2015-04-29 mer 08:52]
+   - State "ONGOING"    from "TODO"       [2015-04-29 mer 08:52]
    - State "TODO"       from ""           [2015-04-28 mar 09:25]
-** TODO gestire il caso in cui dopo un cell_born non troviamo la cella nel cell_locator
+** DONE gestire il caso in cui dopo un cell_born non troviamo la cella nel cell_locator
+   CLOSED: [2015-04-29 mer 08:52]
+   - State "ONGOING"    from "TODO"       [2015-04-29 mer 08:52]
    - State "TODO"       from ""           [2015-04-28 mar 09:25]
-** TODO ri-organizzare i test/dipendenze (a volte forse servirebbe Meck)
+** ONGOING ri-organizzare i test/dipendenze (a volte forse servirebbe Meck)
+   - State "ONGOING"    from "TODO"       [2015-04-29 mer 08:52]
    - State "TODO"       from ""           [2015-04-28 mar 09:25]
+** TODO Sistemare Dialyzer
+   - State "TODO"       from ""           [2015-04-29 mer 08:10]
+** TODO usare meck in cell per cell_locator e togliere deb (?)
+   - State "TODO"       from ""           [2015-04-29 mer 08:35]

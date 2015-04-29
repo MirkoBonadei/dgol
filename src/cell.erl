@@ -83,6 +83,7 @@ init(State) ->
     gen_event:notify(deb, {cell_born, 
                            State#state.position, 
                            State#state.content}),
+    cell:evolve_at(self(), dgol:target_time()),
     {ok, State}.
 
 handle_call({get, Time}, _From, State) ->
@@ -198,18 +199,23 @@ all_tests_test_() ->
     {inorder, {foreach, 
                fun setup/0,
                fun teardown/1,
-               [fun cell_keeps_the_history/0,
+               [
+                fun cell_keeps_the_history/0,
                 fun cell_cannot_predict_the_future/0,
                 fun cell_refuses_collected_in_the_past_or_in_the_future/0,
                 fun cell_eventually_get_in_the_past/0,
                 fun cell_eventually_get_in_the_future/0,
-                fun cell_eventually_get_supports_multiple_requests/0]}}.
+                fun cell_eventually_get_supports_multiple_requests/0
+               ]}}.
 
 setup() ->
+    meck:new(dgol),
+    meck:expect(dgol, target_time, fun() -> 0 end),
     cell_locator:start_link(),
     gen_event:start_link({local, deb}).
 
 teardown(_) ->
+    meck:unload(dgol),
     gen_event:stop(deb).
 
 cell_keeps_the_history() ->

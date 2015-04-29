@@ -15,16 +15,15 @@ all_tests_test_() ->
                 fun cell_can_evolve_at_future_time/0,
                 fun events_about_cells_are_emitted_correctly/0,
                 fun cell_register_itself_after_the_rebirth/0,
-                fun cell_can_recover_after_death/0]}}.
+                fun cell_can_recover_after_death/0
+               ]}}.
 
 start_dgol() ->
     application:start(dgol),
-    gen_event:add_handler(deb, recorder, []),
-    gen_event:add_handler(deb, clock, []).
+    gen_event:add_handler(deb, recorder, []).
 
 stop_dgol(_) ->
     error_logger:tty(false),
-    gen_event:delete_handler(deb, clock, []),
     application:stop(dgol),
     error_logger:tty(true).
 

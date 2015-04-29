@@ -15,7 +15,6 @@ start_link() ->
     {ok, Pid} = supervisor:start_link({local, ?SERVER}, ?MODULE, []),
     case ?TEST of  
         false -> ok = gen_event:add_handler(deb, ui, []),
-                 ok = gen_event:add_handler(deb, clock, []),
                  {ok, Pid};
         true ->
             {ok, Pid}

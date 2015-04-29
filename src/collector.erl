@@ -80,14 +80,16 @@ code_change(_OldVsn, State, _Extra) ->
 -ifdef(TEST).
 
 start_dgol() ->
-    application:start(dgol),
+    meck:new(dgol),
+    meck:expect(dgol, target_time, fun() -> 0 end),
+    cell_locator:start_link(),
+    gen_event:start_link({local, deb}),
     gen_event:add_handler(deb, recorder, []).
 
 stop_dgol(_) ->
-    error_logger:tty(false),
-    gen_event:delete_handler(deb, clock, []),
-    application:stop(dgol),
-    error_logger:tty(true).
+    meck:unload(dgol),
+    gen_event:stop(deb),
+    cell_locator:stop().
 
 all_tests_test_() ->
     {inorder, {foreach, 
@@ -98,8 +100,8 @@ all_tests_test_() ->
 
 colletor_is_able_to_collect_neighbours_content() ->
     Self = self(),
-    {ok, _} = cell_sup:start_cell({1, 1}, {3, 3}, 1),
-    {ok, _} = cell_sup:start_cell({1, 2}, {3, 3}, 0),
+    {ok, _} = cell:start_link({1, 1}, {3, 3}, 1),
+    {ok, _} = cell:start_link({1, 2}, {3, 3}, 0),
     collector:start_link(
       TimeToCollect = 0, 
       [{1, 1}, {1, 2}],
