@@ -210,12 +210,14 @@ all_tests_test_() ->
 
 setup() ->
     meck:new(dgol),
+    meck:new(cell_locator),
     meck:expect(dgol, target_time, fun() -> 0 end),
-    cell_locator:start_link(),
+    meck:expect(cell_locator, put, fun(_Position, _Pid) -> ok end),
     gen_event:start_link({local, deb}).
 
 teardown(_) ->
     meck:unload(dgol),
+    meck:unload(cell_locator),
     gen_event:stop(deb).
 
 cell_keeps_the_history() ->
