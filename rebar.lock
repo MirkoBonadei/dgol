@@ -1,4 +1,8 @@
 [{<<"meck">>,
   {git,"git://github.com/eproxus/meck.git",
        {ref,"dde759050eff19a1a80fd854d7375174b191665d"}},
+  0},
+ {<<"eunit_formatters">>,
+  {git,"git://github.com/seancribbs/eunit_formatters",
+       {ref,"2c73eb6e46b0863f19507857b386a48a53aaf141"}},
   0}].
