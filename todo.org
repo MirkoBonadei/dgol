@@ -66,10 +66,13 @@
    CLOSED: [2015-04-29 mer 08:52]
    - State "ONGOING"    from "TODO"       [2015-04-29 mer 08:52]
    - State "TODO"       from ""           [2015-04-28 mar 09:25]
-** ONGOING ri-organizzare i test/dipendenze (a volte forse servirebbe Meck)
+** DONE ri-organizzare i test/dipendenze (a volte forse servirebbe Meck)
+   CLOSED: [2015-05-04 lun 08:35]
    - State "ONGOING"    from "TODO"       [2015-04-29 mer 08:52]
    - State "TODO"       from ""           [2015-04-28 mar 09:25]
 ** TODO Sistemare Dialyzer
    - State "TODO"       from ""           [2015-04-29 mer 08:10]
-** TODO usare meck in cell per cell_locator e togliere deb (?)
+** DONE usare meck in cell per cell_locator e togliere deb (?)
+   CLOSED: [2015-05-04 lun 08:35]
+   - State "ONGOING"    from "TODO"       [2015-05-04 lun 08:35]
    - State "TODO"       from ""           [2015-04-29 mer 08:35]
