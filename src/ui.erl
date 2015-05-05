@@ -17,7 +17,7 @@ handle_event(Event, State) ->
     {ok, State}.
 
 handle_call(_Event, State) ->
-    {reply, ok, State}.
+    {ok, reply, State}.
 
 handle_info(_Event, State) ->
     {ok, State}.
