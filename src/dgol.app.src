@@ -1,18 +1,8 @@
 {application, dgol,
- [{description, "Distributed Game of Life with Erlang OTP"}
- ,{vsn, "0.1.0"}
- ,{registered, [dgol_sup
-               ,dgol
-               ,cell_sup]}
- ,{mod, {'dgol_app', []}}
- ,{applications,
-   [kernel
-   ,stdlib
-   ]}
- ,{env,[]}
- ,{modules, [dgol_app
-            ,dgol_sup
-            ,dgol
-            ,cell_sup
-            ,cell]}
- ]}.
+ [{description, "Distributed Game of Life with Erlang OTP"},
+  {vsn, "0.1.0"},
+  {registered, [dgol_sup, dgol, cell_sup]},
+  {mod, {'dgol_app', []}},
+  {applications, [kernel, stdlib]},
+  {env,[]},
+  {modules, [dgol_app, dgol_sup, dgol, cell_sup, cell]}]}.
