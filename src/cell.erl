@@ -37,6 +37,29 @@
                 history :: [{time(), content()}],
                 future :: [{time(), fun()}]}).
 
+-ifdef(TEST).
+-define(fail(MessageString, Replaceable),
+        erlang:error({assertion_failed,
+                      [{module, ?MODULE},
+                       {line, ?LINE},
+                       {msg, erlang:iolist_to_binary(io_lib:format(MessageString, Replaceable))}]})
+       ).
+-define(assertReceive(ExpectedMessage, Timeout),
+        begin
+            ((fun() ->
+                      receive
+                         ExpectedMessage ->
+                              ok
+                      after Timeout ->
+                              ?fail(
+                                 "Failed to receive ~p within a timeout of ~p ms", 
+                                 [ExpectedMessage, Timeout])
+                      end
+              end)())
+        end).
+
+-endif.
+
 %%% TODO: solve this internal conflict of trying to spec the return values of 
 %%% OTP.
 -spec start_link(position(), dimensions(), content()) -> {ok, pid()}.
@@ -248,14 +271,14 @@ cell_eventually_get_in_the_past() ->
     cell:collected(Cell, 0, 3),
     cell:collected(Cell, 1, 2),
     cell:eventually_get(Cell, 0, fun(Result) -> Self ! Result end),
-    assertReceive({cell, {2, 2}, _ExpectedTime = 0, _ExpectedContent = 1}, 50).
+    ?assertReceive({cell, {2, 2}, _ExpectedTime = 0, _ExpectedContent = 1}, 50).
 
 cell_eventually_get_in_the_future() ->
     Self = self(),
     {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
     cell:eventually_get(Cell, 1, fun(Result) -> Self ! Result end),
     cell:collected(Cell, 0, 3),
-    assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50).
+    ?assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50).
 
 cell_eventually_get_supports_multiple_requests() ->
     Self = self(),
@@ -263,15 +286,7 @@ cell_eventually_get_supports_multiple_requests() ->
     cell:eventually_get(Cell, 1, fun(Result) -> Self ! Result end),
     cell:eventually_get(Cell, 1, fun(Result) -> Self ! Result end),
     cell:collected(Cell, 0, 3),
-    assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50),
-    assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50).
-
-assertReceive(ExpectedMessage, Timeout) ->
-    receive
-        ReceivedMessage ->
-            ?assertMatch(ExpectedMessage, ReceivedMessage)
-    after Timeout ->
-            ?assertMatch(ExpectedMessage, false)
-    end.    
+    ?assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50),
+    ?assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50).
 
 -endif.
