@@ -7,18 +7,16 @@
 
 -define(SERVER, ?MODULE).
 
--ifndef(TEST).
--define(TEST, false).
+-ifdef(TEST).
+add_handlers() -> ok.
+-else.
+add_handlers() -> ok = gen_event:add_handler(deb, ui, []).
 -endif.
 
 start_link() ->
-    {ok, Pid} = supervisor:start_link({local, ?SERVER}, ?MODULE, []),
-    case ?TEST of  
-        false -> ok = gen_event:add_handler(deb, ui, []),
-                 {ok, Pid};
-        true ->
-            {ok, Pid}
-    end.
+    Res = {ok, _Pid} = supervisor:start_link({local, ?SERVER}, ?MODULE, []),
+    add_handlers(),
+    Res.
 
 %%% OTP callbacks
 init([]) ->
