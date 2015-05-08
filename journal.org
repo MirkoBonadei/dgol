@@ -1,0 +1,23 @@
+* Distributed Game of Life Journal
+
+** 08-Maggio-2015
+Abbiamo preparato un modulo "endurance" per iniziare a testare DGOL
+in modo più intensivo ed abbiamo fatto delle piacevoli scoperte.
+
+Dato che erlang:monitor(process, Pid) causa l'arrivo di un messaggio
+DOWN in caso il Pid non esista, avevamo pensato che il collector, in
+fase di "monitoring" delle celle fosse sicuro. Purtroppo nel nostro
+caso è possibile che il cell_locator restituisca {error, not_found}
+ad una get/1 ed in questo caso abbiamo un crash del collector perchè
+non si può monitorare una tupla:
+
+%% errore!!!
+erlang:monitor({process, not_found}).
+
+Quando capita?
+- il mondo è troppo grande e quindi una cella avvia il processo di
+  collection prima che i vicini siano vivi, in questo caso il
+  collector ha un crash che si riperquote sulla cella. Questo causa
+  un degrado dell'universo fino al "Big Crunch";
+- un processo muore prima che il collector chieda il Pid al
+  cell_locator, forse basterebbe gestire meglio con un "case".
