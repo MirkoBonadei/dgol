@@ -76,3 +76,5 @@
    CLOSED: [2015-05-04 lun 08:35]
    - State "ONGOING"    from "TODO"       [2015-05-04 lun 08:35]
    - State "TODO"       from ""           [2015-04-29 mer 08:35]
+** TODO dgol:evolve/0 è utile e fattibile
+   - State "TODO"       from ""           [2015-05-08 ven 08:32]
