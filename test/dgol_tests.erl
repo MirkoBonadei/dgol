@@ -1,5 +1,6 @@
 -module(dgol_tests).
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("eunit_macros.hrl").
 
 -export([start_dgol/0
         ,stop_dgol/1]).
@@ -47,7 +48,7 @@ cell_can_evolve_at_next_time() ->
     cell:evolve_at(CellPid, 1),
     timer:sleep(500),
     cell:eventually_get(CellPid, 1, fun(Result) -> Self ! Result end),
-    assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 0}, 50).
+    ?assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 0}, 50).
 
 cell_can_evolve_at_future_time() ->
     Self = self(),
@@ -59,15 +60,15 @@ cell_can_evolve_at_future_time() ->
     cell:evolve_at(CellPid, 3),
     timer:sleep(500),
     cell:eventually_get(CellPid, 1, fun(Result) -> Self ! Result end),
-    assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 0}, 50),
+    ?assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 0}, 50),
     dgol:evolve_at(1),
     timer:sleep(500),
     cell:eventually_get(CellPid, 2, fun(Result) -> Self ! Result end),
-    assertReceive({cell, {2, 2}, 2, 0}, 50),
+    ?assertReceive({cell, {2, 2}, 2, 0}, 50),
     dgol:evolve_at(2),
     timer:sleep(500),
     cell:eventually_get(CellPid, 3, fun(Result) -> Self ! Result end),
-    assertReceive({cell, {2, 2}, 3, 0}, 50).
+    ?assertReceive({cell, {2, 2}, 3, 0}, 50).
 
 cells_can_evolve_together() ->
     StepOneLivingCells = [{2, 1}, {2, 2}, {2, 3}],
@@ -108,12 +109,4 @@ cell_can_recover_after_death() ->
     exit(cell_locator:get({1, 1}), test),
     timer:sleep(500),
     ?assert(recorder:is_recorded({cell_evolved, {1, 1}, 0, 5}, 2)).
-
-assertReceive(ExpectedMessage, Timeout) ->
-    receive
-        ReceivedMessage ->
-            ?assertMatch(ExpectedMessage, ReceivedMessage)
-    after Timeout ->
-            ?assertMatch(ExpectedMessage, false)
-    end.
 

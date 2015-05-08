@@ -2,6 +2,7 @@
 -behaviour(gen_server).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("eunit_macros.hrl").
 
 -export([start_link/3,
          stop/1,
@@ -37,28 +38,6 @@
                 history :: [{time(), content()}],
                 future :: [{time(), fun()}]}).
 
--ifdef(TEST).
--define(fail(MessageString, Replaceable),
-        erlang:error({assertion_failed,
-                      [{module, ?MODULE},
-                       {line, ?LINE},
-                       {msg, erlang:iolist_to_binary(io_lib:format(MessageString, Replaceable))}]})
-       ).
--define(assertReceive(ExpectedMessage, Timeout),
-        begin
-            ((fun() ->
-                      receive
-                         ExpectedMessage ->
-                              ok
-                      after Timeout ->
-                              ?fail(
-                                 "Failed to receive ~p within a timeout of ~p ms", 
-                                 [ExpectedMessage, Timeout])
-                      end
-              end)())
-        end).
-
--endif.
 
 %%% TODO: solve this internal conflict of trying to spec the return values of 
 %%% OTP.
