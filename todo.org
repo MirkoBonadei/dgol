@@ -78,3 +78,7 @@
    - State "TODO"       from ""           [2015-04-29 mer 08:35]
 ** TODO dgol:evolve/0 è utile e fattibile
    - State "TODO"       from ""           [2015-05-08 ven 08:32]
+** TODO collector dovrebbe evitare una collection ricorsiva perchè vogliamo processare i DOWN man mano
+   - State "TODO"       from ""           [2015-05-11 lun 10:43]
+** TODO Verificare che tutte le chiamate a cell_locator:get siano sicure
+   - State "TODO"       from ""           [2015-05-11 lun 10:43]
