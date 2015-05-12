@@ -21,3 +21,284 @@ Quando capita?
   un degrado dell'universo fino al "Big Crunch";
 - un processo muore prima che il collector chieda il Pid al
   cell_locator, forse basterebbe gestire meglio con un "case".
+
+** 12-Maggio-2015 (Primo endurance test)
+   Dimensioni del mondo 100x100, con 3 celle vive ({2, 2}, {3, 2}, {4,
+   2}).
+   Macchina con soli due processori disponibili, avviato con:
+#+BEGIN_SRC bash
+ erl +S 2:2 -pa _build/default/lib/dgol/ebin
+#+END_SRC
+   Quando muore una cella si genera un "buco" dovuto al fatto che
+   muoiono 8 collectors con le relative celle, i quali possono a loro
+   volta generare dei crash nel caso vi siano collectors con dei
+   monitor ad una delle 8 celle.
+
+   Durante l'investigazione abbiamo capito che una cella può avere
+   più collectors accessi per una determinata cella target in un
+   determinato istante. Lo abbiamo capito analizzando i crash report:
+
+   Nello stato di ogni collector abbiamo sia le coordinate delle
+   celle per le quali stiamo collezionando lo stato al tempo T, sia
+   la tabella di lookup dei monitor accesi dal collector.
+   Possiamo quindi risalire sia alla cella crashata sia alla cella
+   che ha acceso il collector.
+
+   Ad esempio nei crash report seguenti notiamo che la cella mancante
+   è per 4 volte la {17,22}, per altre 4 volte la {17,23} e per 2
+   volte la {17,24}.
+
+   Questo ci ha fatto venire il dubbio di aver troppi collectors
+   accesi contemporaneamente. Nel codice infatti le evolve_at sono
+   asincrone e ad ogni richiesta di evoluzione corrisponde ad un collector.
+
+#+BEGIN_SRC erlang
+=ERROR REPORT==== 11-May-2015::10:25:28 ===
+** Generic server <0.29343.338> terminating
+** Last message in was {'DOWN',#Ref<0.0.489.3366>,process,<0.4770.0>,killed}
+** When Server state == {state,1885,
+                               [{16,21},
+                                {16,22},
+                                {16,23},
+                                {17,21},
+                                {17,23},
+                                {18,21},
+                                {18,22},
+                                {18,23}],
+                               0,
+                               [{{18,23},#Ref<0.0.489.3361>},
+                                {{18,22},#Ref<0.0.489.3362>},
+                                {{18,21},#Ref<0.0.489.3363>},
+                                {{16,23},#Ref<0.0.489.3366>},
+                                {{16,22},#Ref<0.0.489.3367>},
+                                {{16,21},#Ref<0.0.489.3368>}],
+                               #Fun<cell.2.80995353>}
+** Reason for termination ==
+** give_up
+
+=ERROR REPORT==== 11-May-2015::10:25:28 ===
+** Generic server <0.1661.340> terminating
+** Last message in was {'DOWN',#Ref<0.0.489.3355>,process,<0.4770.0>,killed}
+** When Server state == {state,1885,
+                               [{16,22},
+                                {16,23},
+                                {16,24},
+                                {17,22},
+                                {17,24},
+                                {18,22},
+                                {18,23},
+                                {18,24}],
+                               0,
+                               [{{18,24},#Ref<0.0.489.3349>},
+                                {{18,23},#Ref<0.0.489.3350>},
+                                {{18,22},#Ref<0.0.489.3351>},
+                                {{16,24},#Ref<0.0.489.3354>},
+                                {{16,23},#Ref<0.0.489.3355>},
+                                {{16,22},#Ref<0.0.489.3356>}],
+                               #Fun<cell.2.80995353>}
+** Reason for termination ==
+** give_up
+
+=ERROR REPORT==== 11-May-2015::10:25:28 ===
+** Generic server <0.3887.340> terminating
+** Last message in was {'DOWN',#Ref<0.0.487.95287>,process,<0.4770.0>,killed}
+** When Server state == {state,1885,
+                               [{16,21},
+                                {16,22},
+                                {16,23},
+                                {17,21},
+                                {17,23},
+                                {18,21},
+                                {18,22},
+                                {18,23}],
+                               0,
+                               [{{18,23},#Ref<0.0.487.95279>},
+                                {{18,22},#Ref<0.0.487.95280>},
+                                {{18,21},#Ref<0.0.487.95282>},
+                                {{16,23},#Ref<0.0.487.95287>},
+                                {{16,22},#Ref<0.0.487.95288>},
+                                {{16,21},#Ref<0.0.487.95290>}],
+                               #Fun<cell.2.80995353>}
+** Reason for termination ==
+** give_up
+
+=ERROR REPORT==== 11-May-2015::10:25:28 ===
+** Generic server <0.5143.340> terminating
+** Last message in was {'DOWN',#Ref<0.0.487.95276>,process,<0.4770.0>,killed}
+** When Server state == {state,1885,
+                               [{16,22},
+                                {16,23},
+                                {16,24},
+                                {17,22},
+                                {17,24},
+                                {18,22},
+                                {18,23},
+                                {18,24}],
+                               0,
+                               [{{18,24},#Ref<0.0.487.95266>},
+                                {{18,23},#Ref<0.0.487.95267>},
+                                {{18,22},#Ref<0.0.487.95269>},
+                                {{16,24},#Ref<0.0.487.95274>},
+                                {{16,23},#Ref<0.0.487.95276>},
+                                {{16,22},#Ref<0.0.487.95277>}],
+                               #Fun<cell.2.80995353>}
+** Reason for termination ==
+** give_up
+
+=ERROR REPORT==== 11-May-2015::10:25:28 ===
+** Generic server <0.8348.337> terminating
+** Last message in was {'DOWN',#Ref<0.0.488.261785>,process,<0.4770.0>,killed}
+** When Server state == {state,1885,
+                               [{16,23},
+                                {16,24},
+                                {16,25},
+                                {17,23},
+                                {17,25},
+                                {18,23},
+                                {18,24},
+                                {18,25}],
+                               0,
+                               [{{18,24},#Ref<0.0.488.261776>},
+                                {{18,23},#Ref<0.0.488.261778>},
+                                {{16,25},#Ref<0.0.488.261782>},
+                                {{16,24},#Ref<0.0.488.261784>},
+                                {{16,23},#Ref<0.0.488.261785>}],
+                               #Fun<cell.2.80995353>}
+** Reason for termination ==
+** give_up
+
+=ERROR REPORT==== 11-May-2015::10:25:28 ===
+** Generic server <0.7161.340> terminating
+** Last message in was {'DOWN',#Ref<0.0.488.25257>,process,<0.4770.0>,killed}
+** When Server state == {state,1885,
+                               [{16,21},
+                                {16,22},
+                                {16,23},
+                                {17,21},
+                                {17,23},
+                                {18,21},
+                                {18,22},
+                                {18,23}],
+                               0,
+                               [{{18,23},#Ref<0.0.488.25252>},
+                                {{18,22},#Ref<0.0.488.25253>},
+                                {{18,21},#Ref<0.0.488.25254>},
+                                {{16,23},#Ref<0.0.488.25257>},
+                                {{16,22},#Ref<0.0.488.25258>},
+                                {{16,21},#Ref<0.0.488.25259>}],
+                               #Fun<cell.2.80995353>}
+** Reason for termination ==
+** give_up
+
+=ERROR REPORT==== 11-May-2015::10:25:28 ===
+** Generic server <0.31085.339> terminating
+** Last message in was {'DOWN',#Ref<0.0.488.25159>,process,<0.4770.0>,killed}
+** When Server state == {state,1885,
+                               [{16,22},
+                                {16,23},
+                                {16,24},
+                                {17,22},
+                                {17,24},
+                                {18,22},
+                                {18,23},
+                                {18,24}],
+                               0,
+                               [{{18,24},#Ref<0.0.488.25153>},
+                                {{18,23},#Ref<0.0.488.25154>},
+                                {{18,22},#Ref<0.0.488.25155>},
+                                {{16,24},#Ref<0.0.488.25158>},
+                                {{16,23},#Ref<0.0.488.25159>},
+                                {{16,22},#Ref<0.0.488.25160>}],
+                               #Fun<cell.2.80995353>}
+** Reason for termination ==
+** give_up
+
+=ERROR REPORT==== 11-May-2015::10:25:28 ===
+** Generic server <0.20566.339> terminating
+** Last message in was {'DOWN',#Ref<0.0.486.150483>,process,<0.4770.0>,killed}
+** When Server state == {state,1885,
+                               [{16,22},
+                                {16,23},
+                                {16,24},
+                                {17,22},
+                                {17,24},
+                                {18,22},
+                                {18,23},
+                                {18,24}],
+                               0,
+                               [{{18,24},#Ref<0.0.486.150477>},
+                                {{18,23},#Ref<0.0.486.150478>},
+                                {{18,22},#Ref<0.0.486.150479>},
+                                {{16,24},#Ref<0.0.486.150482>},
+                                {{16,23},#Ref<0.0.486.150483>},
+                                {{16,22},#Ref<0.0.486.150484>}],
+                               #Fun<cell.2.80995353>}
+** Reason for termination ==
+** give_up
+
+=ERROR REPORT==== 11-May-2015::10:25:28 ===
+** Generic server <0.25422.339> terminating
+** Last message in was {'DOWN',#Ref<0.0.486.150490>,process,<0.4770.0>,killed}
+** When Server state == {state,1885,
+                               [{16,21},
+                                {16,22},
+                                {16,23},
+                                {17,21},
+                                {17,23},
+                                {18,21},
+                                {18,22},
+                                {18,23}],
+                               0,
+                               [{{18,23},#Ref<0.0.486.150485>},
+                                {{18,22},#Ref<0.0.486.150486>},
+                                {{18,21},#Ref<0.0.486.150487>},
+                                {{16,23},#Ref<0.0.486.150490>},
+                                {{16,22},#Ref<0.0.486.150491>},
+                                {{16,21},#Ref<0.0.486.150492>}],
+                               #Fun<cell.2.80995353>}
+** Reason for termination ==
+** give_up
+
+=ERROR REPORT==== 11-May-2015::10:25:28 ===
+** Generic server <0.25617.339> terminating
+** Last message in was {'DOWN',#Ref<0.0.486.148668>,process,<0.4770.0>,killed}
+** When Server state == {state,1885,
+                               [{16,23},
+                                {16,24},
+                                {16,25},
+                                {17,23},
+                                {17,25},
+                                {18,23},
+                                {18,24},
+                                {18,25}],
+                               0,
+                               [{{18,24},#Ref<0.0.486.148662>},
+                                {{18,23},#Ref<0.0.486.148663>},
+                                {{16,25},#Ref<0.0.486.148666>},
+                                {{16,24},#Ref<0.0.486.148667>},
+                                {{16,23},#Ref<0.0.486.148668>}],
+                               #Fun<cell.2.80995353>}
+** Reason for termination ==
+** give_up
+#+END_SRC
+
+Ci sorge però un dubbio, come è possibile che abbimo più di un
+collector accesso da un cella, con una stessa cella target, con uno
+stesso tempo target?
+
+Guardando il codice abbiamo capito che cell:evolve_at/2, nella
+relativa handle_cast setta il target time della cella senza
+controllare che non lo stia portando indietro nel tempo. Questo è un
+bug perchè Erlang non assicura l'ordine di arrivo dei messaggi.
+(aspettativa di sequenzialità, probabile bias del programmatore)
+
+Abbiamo inoltre capito che sarebbe utile evitare di avviare processi
+di collezione per tempi che sono già nel target_time della cella, in
+modo da ridurre il carico del sistema per azioni che si
+sovrascriverebbero a vicenda.
+
+Il motivo del down dell'applicazione quindi sembra essere dovuto al
+fatto che `cell_sup` ha visto più di 1000 DOWN di celle in 1 secondo
+(vedi impostazioni di cell_sup), decidendo a sua volta di crashare,
+rimettendosi nelle mani di dgol_sup, il quale per impostazioni di
+supervisione ha spento tutto, ritenendolo un guasto non recuperabile.
