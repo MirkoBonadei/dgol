@@ -78,7 +78,17 @@
    - State "TODO"       from ""           [2015-04-29 mer 08:35]
 ** TODO dgol:evolve/0 è utile e fattibile
    - State "TODO"       from ""           [2015-05-08 ven 08:32]
-** TODO collector dovrebbe evitare una collection ricorsiva perchè vogliamo processare i DOWN man mano
+** TODO collector non ricorsivo ma "a processo", in modo che non molli facilmente il colpo
    - State "TODO"       from ""           [2015-05-11 lun 10:43]
+   Sarebbe belle processare i messaggi di DOWN man mano e re-inviarci
+   i messaggi di richiesta di collection in modo da non fare subito
+   "give_up" perchè questo causa un effetto epidemia.
+
+* BUGS
+** TODO cell:evolve_at/2 sovrascrive il target time della cella (deve essere sempre crescente)
+   - State "TODO"       from ""           [2015-05-12 mar 08:35]
+   Vedi il journal per un esempio.
+** TODO cell:evolve_at/2 dovrebbe restituire "already_evolving" nel caso in cui il tempo richiesto sia già nel target
+   - State "TODO"       from ""           [2015-05-12 mar 08:45]
 ** TODO Verificare che tutte le chiamate a cell_locator:get siano sicure
    - State "TODO"       from ""           [2015-05-11 lun 10:43]
