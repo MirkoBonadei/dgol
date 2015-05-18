@@ -143,6 +143,11 @@ handle_cast({evolve_at, Time}, State) when Time =< State#state.time ->
                            State#state.content,
                            Time}),
     {noreply, State};
+handle_cast({evolve_at, Time}, State) when Time =< State#state.target_time ->
+    gen_event:notify(deb, {already_evolving, 
+                           State#state.position, 
+                           State#state.target_time}),
+    {noreply, State};
 handle_cast({evolve_at, Time}, State) ->
     TimeToCollect = State#state.time,
     NeighboursPositions = State#state.neighbours,
@@ -210,19 +215,24 @@ all_tests_test_() ->
                 fun cell_refuses_collected_in_the_past_or_in_the_future/0,
                 fun cell_eventually_get_in_the_past/0,
                 fun cell_eventually_get_in_the_future/0,
-                fun cell_eventually_get_supports_multiple_requests/0
+                fun cell_eventually_get_supports_multiple_requests/0,
+                fun cell_refuses_to_evolve_to_time_already_in_target/0
                ]}}.
 
 setup() ->
     meck:new(dgol),
     meck:new(cell_locator),
+    meck:new(collector),
     meck:expect(dgol, target_time, fun() -> 0 end),
     meck:expect(cell_locator, put, fun(_Position, _Pid) -> ok end),
-    gen_event:start_link({local, deb}).
+    meck:expect(collector, start_link, [{3, {ok, pid}}]),
+    gen_event:start_link({local, deb}),
+    gen_event:add_handler(deb, recorder, []).
 
 teardown(_) ->
     meck:unload(dgol),
     meck:unload(cell_locator),
+    meck:unload(collector),
     gen_event:stop(deb).
 
 cell_keeps_the_history() ->
@@ -270,5 +280,12 @@ cell_eventually_get_supports_multiple_requests() ->
     cell:collected(Cell, 0, 3),
     ?assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50),
     ?assertReceive({cell, {2, 2}, _ExpectedTime = 1, _ExpectedContent = 1}, 50).
+
+cell_refuses_to_evolve_to_time_already_in_target() ->
+    {ok, Cell} = cell:start_link({2, 2}, {5, 5}, 1),
+    ok = cell:evolve_at(Cell, 2),
+    cell:evolve_at(Cell, 1),
+    timer:sleep(200), %% TODO: add wait for event...
+    ?assert(recorder:is_recorded({already_evolving, {2, 2}, 2})).
 
 -endif.
