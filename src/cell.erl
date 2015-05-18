@@ -74,7 +74,7 @@ eventually_get(Pid, Time, Callback) ->
 collected(Pid, Time, NeighboursAlive) ->
     gen_server:cast(Pid, {collected, Time, NeighboursAlive}).
 
--spec evolve_at(pid(), time()) -> ok.
+-spec evolve_at(pid(), time()|evolve_at) -> ok.
 evolve_at(Pid, Time) ->
     gen_server:cast(Pid, {evolve_at, Time}).
 
@@ -85,7 +85,7 @@ init(State) ->
     gen_event:notify(deb, {cell_born, 
                            State#state.position, 
                            State#state.content}),
-    cell:evolve_at(self(), dgol:target_time()),
+    cell:evolve_at(self(), target_time),
     {ok, State}.
 
 handle_call({get, Time}, _From, State) ->
@@ -134,6 +134,9 @@ handle_cast({eventually_get, Time, Callback}, State) ->
             NextState = State#state{future=[{Time, Callback}|State#state.future]},
             {noreply, NextState}
     end;
+handle_cast({evolve_at, target_time}, State) ->
+    cell:evolve_at(self(), dgol:target_time()),
+    {noreply, State};
 handle_cast({evolve_at, Time}, State) when Time =< State#state.time ->
     gen_event:notify(deb, {already_evolved, 
                            State#state.position, 
