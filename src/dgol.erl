@@ -60,7 +60,7 @@ start_link(Xdim, Ydim, InitialCells) ->
 
 -spec target_time() -> non_neg_integer().
 target_time() ->
-    gen_server:call(?MODULE, target_time).
+    gen_server:call(?MODULE, target_time, 10000).
 
 %%% OTP gen_server callbacks
 
