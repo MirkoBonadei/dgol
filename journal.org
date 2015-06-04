@@ -54,9 +54,9 @@ Quando capita?
 
 #+BEGIN_SRC erlang
 =ERROR REPORT==== 11-May-2015::10:25:28 ===
-** Generic server <0.29343.338> terminating
-** Last message in was {'DOWN',#Ref<0.0.489.3366>,process,<0.4770.0>,killed}
-** When Server state == {state,1885,
+ Generic server <0.29343.338> terminating
+ Last message in was {'DOWN',#Ref<0.0.489.3366>,process,<0.4770.0>,killed}
+ When Server state == {state,1885,
                                [{16,21},
                                 {16,22},
                                 {16,23},
@@ -73,13 +73,13 @@ Quando capita?
                                 {{16,22},#Ref<0.0.489.3367>},
                                 {{16,21},#Ref<0.0.489.3368>}],
                                #Fun<cell.2.80995353>}
-** Reason for termination ==
-** give_up
+ Reason for termination ==
+ give_up
 
 =ERROR REPORT==== 11-May-2015::10:25:28 ===
-** Generic server <0.1661.340> terminating
-** Last message in was {'DOWN',#Ref<0.0.489.3355>,process,<0.4770.0>,killed}
-** When Server state == {state,1885,
+ Generic server <0.1661.340> terminating
+ Last message in was {'DOWN',#Ref<0.0.489.3355>,process,<0.4770.0>,killed}
+ When Server state == {state,1885,
                                [{16,22},
                                 {16,23},
                                 {16,24},
@@ -96,13 +96,13 @@ Quando capita?
                                 {{16,23},#Ref<0.0.489.3355>},
                                 {{16,22},#Ref<0.0.489.3356>}],
                                #Fun<cell.2.80995353>}
-** Reason for termination ==
-** give_up
+ Reason for termination ==
+ give_up
 
 =ERROR REPORT==== 11-May-2015::10:25:28 ===
-** Generic server <0.3887.340> terminating
-** Last message in was {'DOWN',#Ref<0.0.487.95287>,process,<0.4770.0>,killed}
-** When Server state == {state,1885,
+ Generic server <0.3887.340> terminating
+ Last message in was {'DOWN',#Ref<0.0.487.95287>,process,<0.4770.0>,killed}
+ When Server state == {state,1885,
                                [{16,21},
                                 {16,22},
                                 {16,23},
@@ -119,13 +119,13 @@ Quando capita?
                                 {{16,22},#Ref<0.0.487.95288>},
                                 {{16,21},#Ref<0.0.487.95290>}],
                                #Fun<cell.2.80995353>}
-** Reason for termination ==
-** give_up
+ Reason for termination ==
+ give_up
 
 =ERROR REPORT==== 11-May-2015::10:25:28 ===
-** Generic server <0.5143.340> terminating
-** Last message in was {'DOWN',#Ref<0.0.487.95276>,process,<0.4770.0>,killed}
-** When Server state == {state,1885,
+ Generic server <0.5143.340> terminating
+ Last message in was {'DOWN',#Ref<0.0.487.95276>,process,<0.4770.0>,killed}
+ When Server state == {state,1885,
                                [{16,22},
                                 {16,23},
                                 {16,24},
@@ -142,13 +142,13 @@ Quando capita?
                                 {{16,23},#Ref<0.0.487.95276>},
                                 {{16,22},#Ref<0.0.487.95277>}],
                                #Fun<cell.2.80995353>}
-** Reason for termination ==
-** give_up
+ Reason for termination ==
+ give_up
 
 =ERROR REPORT==== 11-May-2015::10:25:28 ===
-** Generic server <0.8348.337> terminating
-** Last message in was {'DOWN',#Ref<0.0.488.261785>,process,<0.4770.0>,killed}
-** When Server state == {state,1885,
+ Generic server <0.8348.337> terminating
+ Last message in was {'DOWN',#Ref<0.0.488.261785>,process,<0.4770.0>,killed}
+ When Server state == {state,1885,
                                [{16,23},
                                 {16,24},
                                 {16,25},
@@ -164,13 +164,13 @@ Quando capita?
                                 {{16,24},#Ref<0.0.488.261784>},
                                 {{16,23},#Ref<0.0.488.261785>}],
                                #Fun<cell.2.80995353>}
-** Reason for termination ==
-** give_up
+ Reason for termination ==
+ give_up
 
 =ERROR REPORT==== 11-May-2015::10:25:28 ===
-** Generic server <0.7161.340> terminating
-** Last message in was {'DOWN',#Ref<0.0.488.25257>,process,<0.4770.0>,killed}
-** When Server state == {state,1885,
+ Generic server <0.7161.340> terminating
+ Last message in was {'DOWN',#Ref<0.0.488.25257>,process,<0.4770.0>,killed}
+ When Server state == {state,1885,
                                [{16,21},
                                 {16,22},
                                 {16,23},
@@ -187,13 +187,13 @@ Quando capita?
                                 {{16,22},#Ref<0.0.488.25258>},
                                 {{16,21},#Ref<0.0.488.25259>}],
                                #Fun<cell.2.80995353>}
-** Reason for termination ==
-** give_up
+ Reason for termination ==
+ give_up
 
 =ERROR REPORT==== 11-May-2015::10:25:28 ===
-** Generic server <0.31085.339> terminating
-** Last message in was {'DOWN',#Ref<0.0.488.25159>,process,<0.4770.0>,killed}
-** When Server state == {state,1885,
+ Generic server <0.31085.339> terminating
+ Last message in was {'DOWN',#Ref<0.0.488.25159>,process,<0.4770.0>,killed}
+ When Server state == {state,1885,
                                [{16,22},
                                 {16,23},
                                 {16,24},
@@ -210,13 +210,13 @@ Quando capita?
                                 {{16,23},#Ref<0.0.488.25159>},
                                 {{16,22},#Ref<0.0.488.25160>}],
                                #Fun<cell.2.80995353>}
-** Reason for termination ==
-** give_up
+ Reason for termination ==
+ give_up
 
 =ERROR REPORT==== 11-May-2015::10:25:28 ===
-** Generic server <0.20566.339> terminating
-** Last message in was {'DOWN',#Ref<0.0.486.150483>,process,<0.4770.0>,killed}
-** When Server state == {state,1885,
+ Generic server <0.20566.339> terminating
+ Last message in was {'DOWN',#Ref<0.0.486.150483>,process,<0.4770.0>,killed}
+ When Server state == {state,1885,
                                [{16,22},
                                 {16,23},
                                 {16,24},
@@ -233,13 +233,13 @@ Quando capita?
                                 {{16,23},#Ref<0.0.486.150483>},
                                 {{16,22},#Ref<0.0.486.150484>}],
                                #Fun<cell.2.80995353>}
-** Reason for termination ==
-** give_up
+ Reason for termination ==
+ give_up
 
 =ERROR REPORT==== 11-May-2015::10:25:28 ===
-** Generic server <0.25422.339> terminating
-** Last message in was {'DOWN',#Ref<0.0.486.150490>,process,<0.4770.0>,killed}
-** When Server state == {state,1885,
+ Generic server <0.25422.339> terminating
+ Last message in was {'DOWN',#Ref<0.0.486.150490>,process,<0.4770.0>,killed}
+ When Server state == {state,1885,
                                [{16,21},
                                 {16,22},
                                 {16,23},
@@ -256,13 +256,13 @@ Quando capita?
                                 {{16,22},#Ref<0.0.486.150491>},
                                 {{16,21},#Ref<0.0.486.150492>}],
                                #Fun<cell.2.80995353>}
-** Reason for termination ==
-** give_up
+ Reason for termination ==
+ give_up
 
 =ERROR REPORT==== 11-May-2015::10:25:28 ===
-** Generic server <0.25617.339> terminating
-** Last message in was {'DOWN',#Ref<0.0.486.148668>,process,<0.4770.0>,killed}
-** When Server state == {state,1885,
+ Generic server <0.25617.339> terminating
+ Last message in was {'DOWN',#Ref<0.0.486.148668>,process,<0.4770.0>,killed}
+ When Server state == {state,1885,
                                [{16,23},
                                 {16,24},
                                 {16,25},
@@ -278,8 +278,8 @@ Quando capita?
                                 {{16,24},#Ref<0.0.486.148667>},
                                 {{16,23},#Ref<0.0.486.148668>}],
                                #Fun<cell.2.80995353>}
-** Reason for termination ==
-** give_up
+ Reason for termination ==
+ give_up
 #+END_SRC
 
 Ci sorge però un dubbio, come è possibile che abbimo più di un
@@ -302,3 +302,30 @@ fatto che `cell_sup` ha visto più di 1000 DOWN di celle in 1 secondo
 (vedi impostazioni di cell_sup), decidendo a sua volta di crashare,
 rimettendosi nelle mani di dgol_sup, il quale per impostazioni di
 supervisione ha spento tutto, ritenendolo un guasto non recuperabile.
+
+#+END_SRC
+
+
+** 04 Giugno 2015
+Abbiamo avviato una partita di game of life con 20x20 ed impostazione
+di VM `+S 2:2 +P 500000`.
+Abbiamo notato che quando una cella muore c'è un aumento di processi
+totali di un multiplo di 9.
+Questo perchè quando una celle muore abbiamo al minimo il collector
+della cella che deve recuperare il passato e gli 8 collector delle
+celle vicine che devono aspettare che la cella in questione abbia
+recuperato il passato. Se il tempo di recupero del passato supera il
+tempo tra un tick e l'altro anche i vicine dei vicini dovranno
+aspettare i vicini della cella che sta recuperando il passato per
+poter evolvere. Questo chiaramente è degenerativo perchè più passato
+c'è da recuperare e più tempo ci vorrà per recuperarlo e più
+l'effetto ripple si allarga, comportando alla fine un crash per too
+many processes.
+Un modo per evitarlo sarebbe quello di adattare il tick alla velocità
+di evoluzione dell'universo.
+
+Con `erlang:memory()` abbiamo analizzato il consumo di memoria e ci
+siamo accorti che la history in formato [{time(), content()}] era
+troppo golosa di memoria.
+Abbiamo quindi deciso di migrarla ad una versione con i sets e la
+memoria ora cresce molto più lentamente.
