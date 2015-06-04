@@ -29,11 +29,31 @@ start_link(TimeToCollect, Neighbours, Callback) ->
                           []).
 
 init(State) ->
-    {ok, State, ?STARTING_TIMEOUT}.
+    timer:apply_after(10, gen_server, cast, [self(), collect_cells]),
+    {ok, State}.
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
+handle_cast(collect_cells, State) ->
+    lists:foreach(fun(Position) ->
+                          %% collector:collect_cell(self(), Position)
+                          gen_server:cast(self(), {collect_cell, Position})
+                  end, State#state.neighbours_coordinates),
+    {noreply, State};
+handle_cast({collect_cell, Position}, State) ->
+    case cell_locator:get(Position) of
+        {error, not_found} ->
+            timer:apply_after(10, gen_server, cast, [self(), {collect_cell, Position}]),
+            {noreply, State};
+        Pid when is_pid(Pid) ->
+            Self = self(),
+            Callback = fun(Result) -> gen_server:cast(Self, Result) end,
+            Ref = erlang:monitor(process, Pid),
+            cell:eventually_get(Pid, State#state.time, Callback),
+            NewState = State#state{neighbours_monitors=[{Position, Ref}|State#state.neighbours_monitors]},
+            {noreply, NewState}
+    end;
 handle_cast({cell, Position, Time, Content}, State) when Time =:= State#state.time ->
     case lists:keyfind(Position, 1, State#state.neighbours_monitors) of
         {Position, Reference} ->
@@ -56,31 +76,16 @@ handle_cast({cell, Position, Time, Content}, State) when Time =:= State#state.ti
             {noreply, State}
     end.
 
-handle_info(timeout, State) ->
-    NeighboursCoordinates = State#state.neighbours_coordinates,
-    Self = self(),
-    Callback = fun(Result) -> gen_server:cast(Self, Result) end,
-    NeighboursMonitors = lists:map(fun({Position, CellPid}) ->
-                                           Ref = erlang:monitor(process, CellPid),
-                                           cell:eventually_get(CellPid, State#state.time, Callback),
-                                           {Position, Ref}
-                                   end, locate_cells(NeighboursCoordinates, [])),
-    {noreply, State#state{neighbours_monitors=NeighboursMonitors}};
-handle_info({'DOWN', _Ref, process, _Pid, _Info}, State) ->
-    {stop, give_up, State}.
-
-%% TODO: set a max number of retries
-locate_cells([], Acc) ->
-    Acc;
-locate_cells([H|T], Acc) ->
-    case cell_locator:get(H) of
-        {error, not_found} ->
-            timer:sleep(10),
-            locate_cells([H|T], Acc);
-        Pid when is_pid(Pid) ->
-            locate_cells(T, [{H, Pid}|Acc])
+handle_info({'DOWN', Ref, process, _Pid, _Info}, State) ->
+    case lists:keyfind(Ref, 2, State#state.neighbours_monitors) of
+        {Position, Ref} ->
+            NewNeighboursMonitors = lists:keydelete(Ref, 2, State#state.neighbours_monitors),
+            gen_server:cast(self(), {collect_cell, Position}),
+            {noreply, State#state{neighbours_monitors=NewNeighboursMonitors}};
+        _ ->
+            %% log or crash
+            {noreply, State}
     end.
-
 
 terminate(_Reason, _State) ->
     ok.
