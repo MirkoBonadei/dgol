@@ -329,3 +329,17 @@ siamo accorti che la history in formato [{time(), content()}] era
 troppo golosa di memoria.
 Abbiamo quindi deciso di migrarla ad una versione con i sets e la
 memoria ora cresce molto più lentamente.
+
+** 09 Giugno 2015
+Abbiamo deciso di evitare di avviare un collector ad ogni richiesta
+di evoluzione. Questo causava un sovraccarico del sistema crescente
+con il passare del tempo. Infatti a tempi elevati, la morte di una
+cella causava un rallentamento della velocità di evoluzione, con
+conseguente aumento del numero di processi (appunto i collector delle
+celle).
+Adesso le celle sanno se un collector sta lavorando per loro, in modo
+da riuscire a mantenere un solo collector attivo per cella in un
+determinato istante temporale.
+Questo dovrebbe consentirci di mantenere il numero di processi sotto
+controllo in modo da poter poi affrontare universi con centinaia di
+migliaia di celle.
