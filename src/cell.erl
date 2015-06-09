@@ -35,9 +35,8 @@
                 neighbours :: neighbours(),
                 time :: time(),
                 target_time :: time(),
-                history :: [{time(), content()}],
+                history :: sets:set(time()),
                 future :: [{time(), fun()}]}).
-
 
 %%% TODO: solve this internal conflict of trying to spec the return values of 
 %%% OTP.
@@ -54,7 +53,7 @@ start_link({X, Y} = Pos, {Xdim, Ydim} = Dim, InitialContent)
                                  neighbours = compute_neighbours(Pos, Dim),
                                  time = 0,
                                  target_time=0,
-                                 history = [{0, InitialContent}],
+                                 history = add_to_history(0, InitialContent, sets:new()),
                                  future = []},
                          []).
 
@@ -88,20 +87,18 @@ init(State) ->
     cell:evolve_at(self(), target_time),
     {ok, State}.
 
+handle_call({get, Time}, _From, State) when Time > State#state.time ->
+    {reply, future, State};
 handle_call({get, Time}, _From, State) ->
-    case lists:keyfind(Time, 1, State#state.history) of
-        {Time, Content} ->
-            {reply, {cell, State#state.position, Time, Content}, State};
-        false ->
-            {reply, future, State}
-    end;
+    Content = content_from_history(Time, State#state.history),
+    {reply, {cell, State#state.position, Time, Content}, State};
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State}.
 
 handle_cast({collected, Time, NeighboursAlive}, State) when Time =:= State#state.time ->
     NextTime = Time + 1,
     NextContent = evolve(State#state.content, NeighboursAlive),
-    NextHistory = [{NextTime, NextContent} | State#state.history],
+    NextHistory = add_to_history(NextTime, NextContent, State#state.history),
     {KnownFutures, UnknownFutures} = split_known_futures(NextTime, State#state.future),
     reply_known_futures({cell, State#state.position, NextTime, NextContent}, KnownFutures),
     gen_event:notify(deb, {cell_evolved, 
@@ -125,15 +122,13 @@ handle_cast({collected, Time, NeighboursAlive}, State) when Time =:= State#state
                 target_time=TargetTime}};
 handle_cast({collected, _Time, _NeighboursAlive}, State) ->
     {noreply, State};
+handle_cast({eventually_get, Time, Callback}, State) when Time > State#state.time ->
+    NextState = State#state{future=[{Time, Callback}|State#state.future]},
+    {noreply, NextState};
 handle_cast({eventually_get, Time, Callback}, State) ->
-    case lists:keyfind(Time, 1, State#state.history) of
-        {Time, Content} ->
-            Callback({cell, State#state.position, Time, Content}),
-            {noreply, State};
-        false ->
-            NextState = State#state{future=[{Time, Callback}|State#state.future]},
-            {noreply, NextState}
-    end;
+    Content = content_from_history(Time, State#state.history),
+    Callback({cell, State#state.position, Time, Content}),
+    {noreply, State};
 handle_cast({evolve_at, target_time}, State) ->
     cell:evolve_at(self(), dgol:target_time()),
     {noreply, State};
@@ -203,6 +198,21 @@ collect(TimeToCollect, NeighboursPositions) ->
                                                end),
     ok.
 
+-spec add_to_history(time(), content(), sets:set(time())) -> sets:set(time()).
+add_to_history(_Time, 0, History) ->
+    History;
+add_to_history(Time, 1, History) ->
+    sets:add_element(Time, History).
+
+-spec content_from_history(time(), sets:set(time())) -> content().
+content_from_history(Time, History) ->
+    case sets:is_element(Time, History) of
+        true ->
+            1;
+        _ ->
+            0
+    end.
+    
 -ifdef(TEST).
 
 all_tests_test_() ->
