@@ -35,6 +35,7 @@
                 neighbours :: neighbours(),
                 time :: time(),
                 target_time :: time(),
+                collecting :: boolean(),
                 history :: sets:set(time()),
                 future :: [{time(), fun()}]}).
 
@@ -53,6 +54,7 @@ start_link({X, Y} = Pos, {Xdim, Ydim} = Dim, InitialContent)
                                  neighbours = compute_neighbours(Pos, Dim),
                                  time = 0,
                                  target_time=0,
+                                 collecting=false,
                                  history = add_to_history(0, InitialContent, sets:new()),
                                  future = []},
                          []).
@@ -105,21 +107,19 @@ handle_cast({collected, Time, NeighboursAlive}, State) when Time =:= State#state
                            State#state.position,
                            NextContent,
                            NextTime}),
-    TargetTime = case State#state.target_time > NextTime of
-                     true ->
-                         TimeToCollect = NextTime,
-                         NeighboursPositions = State#state.neighbours,
-                         collect(TimeToCollect, NeighboursPositions),
-                         State#state.target_time;
-                     _ -> 
-                         State#state.time
-                 end,
-    {noreply, State#state{
-                content=NextContent, 
-                history=NextHistory,
-                future=UnknownFutures,
-                time = NextTime,
-                target_time=TargetTime}};
+    NextState = State#state{content=NextContent, 
+                            history=NextHistory,
+                            future=UnknownFutures,
+                            time=NextTime},
+    case State#state.target_time > NextTime of
+        true ->
+            TimeToCollect = NextTime,
+            NeighboursPositions = State#state.neighbours,
+            collect(TimeToCollect, NeighboursPositions),
+            {noreply, NextState#state{collecting=true}};
+        _ -> 
+            {noreply, NextState#state{collecting=false}}
+    end;
 handle_cast({collected, _Time, _NeighboursAlive}, State) ->
     {noreply, State};
 handle_cast({eventually_get, Time, Callback}, State) when Time > State#state.time ->
@@ -143,11 +143,13 @@ handle_cast({evolve_at, Time}, State) when Time =< State#state.target_time ->
                            State#state.position, 
                            State#state.target_time}),
     {noreply, State};
+handle_cast({evolve_at, Time}, State) when State#state.collecting ->
+    {noreply, State#state{target_time=Time}};
 handle_cast({evolve_at, Time}, State) ->
     TimeToCollect = State#state.time,
     NeighboursPositions = State#state.neighbours,
     collect(TimeToCollect, NeighboursPositions),
-    {noreply, State#state{target_time=Time}}.
+    {noreply, State#state{target_time=Time, collecting=true}}.
 
 handle_info(_Request, State) ->
     {noreply, State}.
