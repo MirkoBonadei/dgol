@@ -16,9 +16,9 @@
 init(_) ->
     Wx = wx:new(),
     Frame = wxFrame:new(Wx, -1, "Distributed game of life", [{size, {800, 600}}]),
-    {ok, Frame}.
+    {ok, {Frame, nil}}.
 
-handle_event({universe_created, Xdim, Ydim}, Frame) ->
+handle_event({universe_created, Xdim, Ydim}, {Frame, _}) ->
     Grid = wxGrid:new(Frame, 10, 10),
     wxGrid:createGrid(Grid, Xdim, Ydim),
     wxGrid:setColMinimalAcceptableWidth(Grid, 1),
@@ -34,7 +34,11 @@ handle_event({universe_created, Xdim, Ydim}, Frame) ->
     %%[wxGrid:setColSize(Grid, X, ) || X <- lists:seq(0, Xdim), Y <- lists:seq(0, Ydim)],    
     wxGrid:forceRefresh(Grid),
     wxFrame:show(Frame),
-    {ok, Frame};
+    {ok, {Frame, Grid}};
+handle_event({cell_born, {X, Y}, 1}, {Frame, Grid}) ->
+    wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
+    wxGrid:forceRefresh(Grid),
+    {ok, {Frame, Grid}};
 handle_event(_, Frame) ->
     {ok, Frame}.
 
