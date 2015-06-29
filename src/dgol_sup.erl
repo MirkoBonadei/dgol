@@ -10,7 +10,8 @@
 -ifdef(TEST).
 add_handlers() -> ok.
 -else.
-add_handlers() -> ok = gen_event:add_handler(deb, ui, []).
+add_handlers() -> ok = gen_event:add_handler(deb, ui, []),
+                  ok = gen_event:add_handler(deb, gui, []).
 -endif.
 
 start_link() ->
