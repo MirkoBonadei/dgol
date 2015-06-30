@@ -1,23 +1,12 @@
 -module(dgol_sup).
-
 -behaviour(supervisor).
-
 -export([start_link/0]).
 -export([init/1]).
 
 -define(SERVER, ?MODULE).
 
--ifdef(TEST).
-add_handlers() -> ok.
--else.
-add_handlers() -> ok = gen_event:add_handler(deb, ui, []),
-                  ok = gen_event:add_handler(deb, gui, []).
--endif.
-
 start_link() ->
-    Res = {ok, _Pid} = supervisor:start_link({local, ?SERVER}, ?MODULE, []),
-    add_handlers(),
-    Res.
+    {ok, _Pid} = supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 %%% OTP callbacks
 init([]) ->

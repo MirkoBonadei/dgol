@@ -2,6 +2,7 @@
 -behaviour(gen_server).
 
 -export([start_session/3,
+         start_session/4,
          evolve_at/1,
          start_session_and_wait/4,
          target_time/0]).
@@ -17,11 +18,12 @@
                 size_y :: pos_integer(),
                 target_time :: non_neg_integer()}).
 
--spec start_session(pos_integer(), pos_integer(), [cell:position(), ...]) ->
+-spec start_session(pos_integer(), pos_integer(), [cell:position(), ...], [{module(), [term()]}]) ->
                            supervisor:startchild_ret() | {error, already_started}.
-start_session(Xdim, Ydim, InitialCells) ->
+start_session(Xdim, Ydim, InitialCells, EventHandlers) ->
     case whereis(dgol) of
         undefined ->
+            [gen_event:add_handler(deb, Handler, StartingParams) || {Handler, StartingParams} <- EventHandlers],
             gen_event:notify(deb, {universe_created, Xdim, Ydim}),
             supervisor:start_child(dgol_sup, 
                                    {dgol, {dgol, start_link, [Xdim, Ydim, InitialCells]},
@@ -29,6 +31,11 @@ start_session(Xdim, Ydim, InitialCells) ->
         _ ->
             {error, already_started}
     end.
+
+-spec start_session(pos_integer(), pos_integer(), [cell:position(), ...]) ->
+                           supervisor:startchild_ret() | {error, already_started}.
+start_session(Xdim, Ydim, InitialCells) ->
+    dgol:start_session(Xdim, Ydim, InitialCells, []).
 
 -spec start_session_and_wait(pos_integer(), pos_integer(), [cell:position(), ...], timeout()) ->
                            supervisor:startchild_ret() | {error, already_started} | {error, timeout}.
