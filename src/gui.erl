@@ -23,7 +23,7 @@ handle_event({universe_created, Xdim, Ydim}, {Frame, _}) ->
     wxGrid:createGrid(Grid, Xdim, Ydim),
     wxGrid:setColMinimalAcceptableWidth(Grid, 1),
     wxGrid:setRowMinimalAcceptableHeight(Grid, 1),
-    [wxGrid:setColSize(Grid, Col, round(780/ Ydim)) || Col <- lists:seq(0, Ydim)],
+    [wxGrid:setColSize(Grid, Col, round(780/Ydim)) || Col <- lists:seq(0, Ydim)],
     [wxGrid:setRowSize(Grid, Row, round(580/Xdim)) || Row <- lists:seq(0, Xdim)],
     wxGrid:setRowLabelSize(Grid, 0),
     wxGrid:setColLabelSize(Grid, 0),
