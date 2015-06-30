@@ -39,6 +39,14 @@ handle_event({cell_born, {X, Y}, 1}, {Frame, Grid}) ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid}};
+handle_event({cell_evolved, {X, Y}, 0, _}, {Frame, Grid}) ->
+    wxGrid:setCellBackgroundColour(Grid, X, Y, {255, 255, 255, 0}),
+    wxGrid:forceRefresh(Grid),
+    {ok, {Frame, Grid}};
+handle_event({cell_evolved, {X, Y}, 1, _}, {Frame, Grid}) ->
+    wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
+    wxGrid:forceRefresh(Grid),
+    {ok, {Frame, Grid}};
 handle_event(_, Frame) ->
     {ok, Frame}.
 
