@@ -12,14 +12,18 @@
 
 %% TODO:
 %% - dovrebbe essere impossibile selezionare più di una cella (anche con il drag del mouse)
+%% - non è il massimo andare sulla handle_info/2 per gestire gli eventi della GUI
 
 init(_) ->
     Wx = wx:new(),
     Frame = wxFrame:new(Wx, -1, "Distributed game of life", [{size, {800, 600}}]),
-    {ok, {Frame, nil}}.
+    {ok, {Frame, nil, 1}}.
 
-handle_event({universe_created, Xdim, Ydim}, {Frame, _}) ->
-    Grid = wxGrid:new(Frame, 10, 10),
+handle_event({universe_created, Xdim, Ydim}, {Frame, _, Time}) ->
+    Sz = wxBoxSizer:new(?wxVERTICAL),
+
+    %%Grid = wxGrid:new(Frame, 10, 10),
+    Grid = wxGrid:new(Frame, -1),
     wxGrid:createGrid(Grid, Xdim, Ydim),
     wxGrid:setColMinimalAcceptableWidth(Grid, 1),
     wxGrid:setRowMinimalAcceptableHeight(Grid, 1),
@@ -32,28 +36,43 @@ handle_event({universe_created, Xdim, Ydim}, {Frame, _}) ->
     wxGrid:disableDragColSize(Grid),
     wxGrid:disableDragRowSize(Grid),
     %%[wxGrid:setColSize(Grid, X, ) || X <- lists:seq(0, Xdim), Y <- lists:seq(0, Ydim)],    
+
+    Tick = wxButton:new(Frame, 10, [{label, "Tick"}]),
+
+    wxSizer:add(Sz, Grid, [{border, 4}]),
+    wxSizer:add(Sz, Tick, [{border, 4}]),
+    wxWindow:setSizer(Frame, Sz),
     wxGrid:forceRefresh(Grid),
+
+    wxFrame:connect(Frame, command_button_clicked),
+
     wxFrame:show(Frame),
-    {ok, {Frame, Grid}};
-handle_event({cell_born, {X, Y}, 1}, {Frame, Grid}) ->
+    {ok, {Frame, Grid, Time}};
+handle_event({cell_born, {X, Y}, 1}, {Frame, Grid, Time}) ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
     wxGrid:forceRefresh(Grid),
-    {ok, {Frame, Grid}};
-handle_event({cell_evolved, {X, Y}, 0, _}, {Frame, Grid}) ->
+    {ok, {Frame, Grid, Time}};
+handle_event({cell_evolved, {X, Y}, 0, _}, {Frame, Grid, Time}) ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {255, 255, 255, 0}),
     wxGrid:forceRefresh(Grid),
-    {ok, {Frame, Grid}};
-handle_event({cell_evolved, {X, Y}, 1, _}, {Frame, Grid}) ->
+    {ok, {Frame, Grid, Time}};
+handle_event({cell_evolved, {X, Y}, 1, _}, {Frame, Grid, Time}) ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
     wxGrid:forceRefresh(Grid),
-    {ok, {Frame, Grid}};
-handle_event(_, Frame) ->
-    {ok, Frame}.
+    {ok, {Frame, Grid, Time}};
+handle_event(_Event, State) ->
+    %%io:format(user, "~p~n", [Event]),
+    {ok, State}.
 
 handle_call(_Event, State) ->
+    %%io:format(user, "~p~n", [Event]),
     {ok, reply, State}.
 
+handle_info(#wx{id=10, event=#wxCommand{type=command_button_clicked}}, {Frame, Grid, Time}) ->
+    dgol:evolve_at(Time),
+    {ok, {Frame, Grid, Time + 1}};
 handle_info(_Event, State) ->
+    %%io:format(user, "~p~n", [Event]),
     {ok, State}.
 
 code_change(_OldVsn, State, _Extra) ->
