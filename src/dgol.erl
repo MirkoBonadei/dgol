@@ -89,6 +89,7 @@ handle_cast(init_done, State) ->
 handle_cast({evolve_at, Time}, State) ->
     [cell:evolve_at(cell_locator:get({X, Y}), Time) || X <- lists:seq(0, State#state.size_x - 1),
                                                        Y <- lists:seq(0, State#state.size_y - 1)],
+    gen_event:notify(deb, {target_time_updated, Time}),
     {noreply, State#state{target_time=Time}}.
 
 handle_info(_Request, State) ->

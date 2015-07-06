@@ -16,13 +16,11 @@
 
 init(_) ->
     Wx = wx:new(),
-    Frame = wxFrame:new(Wx, -1, "Distributed game of life", [{size, {800, 600}}]),
+    Frame = wxFrame:new(Wx, -1, "Distributed game of life", [{size, {850, 650}}]),
     {ok, {Frame, nil, 1}}.
 
 handle_event({universe_created, Xdim, Ydim}, {Frame, _, Time}) ->
     Sz = wxBoxSizer:new(?wxVERTICAL),
-
-    %%Grid = wxGrid:new(Frame, 10, 10),
     Grid = wxGrid:new(Frame, -1),
     wxGrid:createGrid(Grid, Xdim, Ydim),
     wxGrid:setColMinimalAcceptableWidth(Grid, 1),
@@ -35,7 +33,9 @@ handle_event({universe_created, Xdim, Ydim}, {Frame, _, Time}) ->
     wxGrid:disableDragGridSize(Grid),
     wxGrid:disableDragColSize(Grid),
     wxGrid:disableDragRowSize(Grid),
-    %%[wxGrid:setColSize(Grid, X, ) || X <- lists:seq(0, Xdim), Y <- lists:seq(0, Ydim)],    
+
+    wxFrame:createStatusBar(Frame),
+    wxFrame:setStatusText(Frame, "Ready"),
 
     Tick = wxButton:new(Frame, 10, [{label, "Tick"}]),
 
@@ -45,6 +45,7 @@ handle_event({universe_created, Xdim, Ydim}, {Frame, _, Time}) ->
     wxGrid:forceRefresh(Grid),
 
     wxFrame:connect(Frame, command_button_clicked),
+    wxFrame:connect(Frame, grid_cell_left_dclick),
 
     wxFrame:show(Frame),
     {ok, {Frame, Grid, Time}};
@@ -60,8 +61,14 @@ handle_event({cell_evolved, {X, Y}, 1, _}, {Frame, Grid, Time}) ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid, Time}};
-handle_event(_Event, State) ->
-    %%io:format(user, "~p~n", [Event]),
+handle_event({cell_died, {X, Y}}, {Frame, Grid, Time}) ->
+    wxFrame:setStatusText(Frame, io_lib:format("Cell {~p, ~p} is dead", [X, Y])),
+    {ok, {Frame, Grid, Time}};
+handle_event({target_time_updated, Time}, {Frame, Grid, _}) ->
+    wxFrame:setStatusText(Frame, io_lib:format("Time: ~p", [Time])),
+    {ok, {Frame, Grid, Time + 1}};
+handle_event(Event, State) ->
+    io:format(user, "~p~n", [Event]),
     {ok, State}.
 
 handle_call(_Event, State) ->
@@ -70,9 +77,12 @@ handle_call(_Event, State) ->
 
 handle_info(#wx{id=10, event=#wxCommand{type=command_button_clicked}}, {Frame, Grid, Time}) ->
     dgol:evolve_at(Time),
-    {ok, {Frame, Grid, Time + 1}};
-handle_info(_Event, State) ->
-    %%io:format(user, "~p~n", [Event]),
+    {ok, {Frame, Grid, Time}};
+handle_info(#wx{event=#wxGrid{type=grid_cell_left_dclick, row=X, col=Y}}, {Frame, Grid, Time}) ->
+    exit(cell_locator:get({X, Y}), kill),
+    {ok, {Frame, Grid, Time}};
+handle_info(Event, State) ->
+    io:format(user, "~p~n", [Event]),
     {ok, State}.
 
 code_change(_OldVsn, State, _Extra) ->
