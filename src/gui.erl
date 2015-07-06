@@ -16,7 +16,7 @@
 
 init(_) ->
     Wx = wx:new(),
-    Frame = wxFrame:new(Wx, -1, "Distributed game of life", [{size, {850, 650}}]),
+    Frame = wxFrame:new(Wx, -1, "Distributed game of life", [{size, {800, 670}}]),
     {ok, {Frame, nil, 1}}.
 
 handle_event({universe_created, Xdim, Ydim}, {Frame, _, Time}) ->
@@ -37,10 +37,14 @@ handle_event({universe_created, Xdim, Ydim}, {Frame, _, Time}) ->
     wxFrame:createStatusBar(Frame),
     wxFrame:setStatusText(Frame, "Ready"),
 
+    Hs = wxBoxSizer:new(?wxHORIZONTAL),
     Tick = wxButton:new(Frame, 10, [{label, "Tick"}]),
+    Auto = wxButton:new(Frame, 11, [{label, "Start"}]),
+    wxSizer:add(Hs, Tick, [{border, 4}]),
+    wxSizer:add(Hs, Auto, [{border, 4}]),
 
     wxSizer:add(Sz, Grid, [{border, 4}]),
-    wxSizer:add(Sz, Tick, [{border, 4}]),
+    wxSizer:add(Sz, Hs, [{border, 4}]),
     wxWindow:setSizer(Frame, Sz),
     wxGrid:forceRefresh(Grid),
 
@@ -77,6 +81,14 @@ handle_call(_Event, State) ->
 
 handle_info(#wx{id=10, event=#wxCommand{type=command_button_clicked}}, {Frame, Grid, Time}) ->
     dgol:evolve_at(Time),
+    {ok, {Frame, Grid, Time}};
+handle_info(#wx{id=11, event=#wxCommand{type=command_button_clicked}}, {Frame, Grid, Time}) ->
+    dgol:evolve_at(Time),
+    Button = wx:typeCast(wxWindow:findWindowById(11), wxButton),
+    case wxButton:getLabel(Button) of
+        "Start" ->  wxButton:setLabel(Button, "Stop");
+        "Stop" -> wxButton:setLabel(Button, "Start")
+    end,
     {ok, {Frame, Grid, Time}};
 handle_info(#wx{event=#wxGrid{type=grid_cell_left_dclick, row=X, col=Y}}, {Frame, Grid, Time}) ->
     exit(cell_locator:get({X, Y}), kill),
