@@ -13,6 +13,8 @@
 %% TODO:
 %% - dovrebbe essere impossibile selezionare più di una cella (anche con il drag del mouse)
 %% - non è il massimo andare sulla handle_info/2 per gestire gli eventi della GUI
+%% - ascoltare la morte del ticker e fare il toggle dell'auto-button
+%% - fare uno step di accensione delle celle (?)
 
 init(_) ->
     Wx = wx:new(),
