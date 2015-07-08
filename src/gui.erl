@@ -83,11 +83,17 @@ handle_info(#wx{id=10, event=#wxCommand{type=command_button_clicked}}, {Frame, G
     dgol:evolve_at(Time),
     {ok, {Frame, Grid, Time}};
 handle_info(#wx{id=11, event=#wxCommand{type=command_button_clicked}}, {Frame, Grid, Time}) ->
-    dgol:evolve_at(Time),
-    Button = wx:typeCast(wxWindow:findWindowById(11), wxButton),
-    case wxButton:getLabel(Button) of
-        "Start" ->  wxButton:setLabel(Button, "Stop");
-        "Stop" -> wxButton:setLabel(Button, "Start")
+    AutoButton = wx:typeCast(wxWindow:findWindowById(11), wxButton),
+    TickButton = wx:typeCast(wxWindow:findWindowById(10), wxButton),
+    case wxButton:getLabel(AutoButton) of
+        "Start" ->  
+            wxButton:setLabel(AutoButton, "Stop"),
+            wxButton:disable(TickButton),
+            start_timer(Time);
+        "Stop" -> 
+            wxButton:setLabel(AutoButton, "Start"),
+            wxButton:enable(TickButton),
+            stop_timer()
     end,
     {ok, {Frame, Grid, Time}};
 handle_info(#wx{event=#wxGrid{type=grid_cell_left_dclick, row=X, col=Y}}, {Frame, Grid, Time}) ->
@@ -103,3 +109,15 @@ code_change(_OldVsn, State, _Extra) ->
 terminate(_, _Frame) ->
     wx:destroy(),
     ok.
+
+start_timer(Time) ->
+    register(ticker, spawn(fun() -> tick(Time, 500) end)).
+
+stop_timer() ->
+    exit(whereis(ticker), kill),
+    unregister(ticker).
+
+tick(Time, SleepTime) ->
+    dgol:evolve_at(Time),
+    timer:sleep(SleepTime),
+    tick(Time + 1, SleepTime).
