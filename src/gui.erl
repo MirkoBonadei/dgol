@@ -55,15 +55,19 @@ handle_event({universe_created, Xdim, Ydim}, {Frame, _, Time}) ->
 
     wxFrame:show(Frame),
     {ok, {Frame, Grid, Time}};
+handle_event({cell_born, {X, Y}, _}, {Frame, Grid, Time}) when Time > 1 ->
+    wxGrid:setCellBackgroundColour(Grid, X, Y, {255, 0, 0, 0}),
+    wxGrid:forceRefresh(Grid),
+    {ok, {Frame, Grid, Time}};
 handle_event({cell_born, {X, Y}, 1}, {Frame, Grid, Time}) ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid, Time}};
-handle_event({cell_evolved, {X, Y}, 0, _}, {Frame, Grid, Time}) ->
+handle_event({cell_evolved, {X, Y}, 0, CellTime}, {Frame, Grid, Time}) when CellTime =:= Time - 1 ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {255, 255, 255, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid, Time}};
-handle_event({cell_evolved, {X, Y}, 1, _}, {Frame, Grid, Time}) ->
+handle_event({cell_evolved, {X, Y}, 1, CellTime}, {Frame, Grid, Time}) when CellTime =:= Time - 1->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid, Time}};
