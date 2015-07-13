@@ -1,0 +1,23 @@
+* Distributed Game of Life
+
+** What & Why
+
+** Game of Life
+   spiegazione di cosa è il game of life
+
+
+** Game of life in Erlang
+   Piano generale di come affronteremo il problema (ad altissimo
+   livello). Riferimento al Game Of Life fatto da Torben mesi fa.
+
+** Implementation
+   Discussione dei dettagli di implementazione con particolare
+   attenzione alle scelte fatte. Possiamo prenderli modulo per modulo.
+   Evidenziare le scelte più importanti cercando di ricordare gli
+   "errori" fatti.
+
+** Testing
+
+** Release
+
+** Conclusions
