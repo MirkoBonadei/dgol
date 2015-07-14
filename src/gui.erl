@@ -63,11 +63,11 @@ handle_event({cell_born, {X, Y}, 1}, {Frame, Grid, Time}) ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid, Time}};
-handle_event({cell_evolved, {X, Y}, 0, CellTime}, {Frame, Grid, Time}) when CellTime =:= Time - 1 ->
+handle_event({cell_evolved, {X, Y}, 0, CellTime}, {Frame, Grid, Time}) when CellTime >= Time ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {255, 255, 255, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid, Time}};
-handle_event({cell_evolved, {X, Y}, 1, CellTime}, {Frame, Grid, Time}) when CellTime =:= Time - 1->
+handle_event({cell_evolved, {X, Y}, 1, CellTime}, {Frame, Grid, Time}) when CellTime >= Time ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid, Time}};
@@ -76,9 +76,9 @@ handle_event({cell_died, {X, Y}}, {Frame, Grid, Time}) ->
     {ok, {Frame, Grid, Time}};
 handle_event({target_time_updated, Time}, {Frame, Grid, _}) ->
     wxFrame:setStatusText(Frame, io_lib:format("Time: ~p", [Time])),
-    {ok, {Frame, Grid, Time + 1}};
+    {ok, {Frame, Grid, Time}};
 handle_event(Event, State) ->
-    io:format(user, "~p~n", [Event]),
+    io:format(user, "event: ~p~n", [Event]),
     {ok, State}.
 
 handle_call(_Event, State) ->
@@ -86,7 +86,7 @@ handle_call(_Event, State) ->
     {ok, reply, State}.
 
 handle_info(#wx{id=10, event=#wxCommand{type=command_button_clicked}}, {Frame, Grid, Time}) ->
-    dgol:evolve_at(Time),
+    dgol:evolve(),
     {ok, {Frame, Grid, Time}};
 handle_info(#wx{id=11, event=#wxCommand{type=command_button_clicked}}, {Frame, Grid, Time}) ->
     AutoButton = wx:typeCast(wxWindow:findWindowById(11), wxButton),
@@ -95,7 +95,7 @@ handle_info(#wx{id=11, event=#wxCommand{type=command_button_clicked}}, {Frame, G
         "Start" ->  
             wxButton:setLabel(AutoButton, "Stop"),
             wxButton:disable(TickButton),
-            start_timer(Time);
+            start_timer();
         "Stop" -> 
             wxButton:setLabel(AutoButton, "Start"),
             wxButton:enable(TickButton),
@@ -116,14 +116,14 @@ terminate(_, _Frame) ->
     wx:destroy(),
     ok.
 
-start_timer(Time) ->
-    register(ticker, spawn(fun() -> tick(Time, 500) end)).
+start_timer() ->
+    register(ticker, spawn(fun() -> tick(500) end)).
 
 stop_timer() ->
     exit(whereis(ticker), kill),
     unregister(ticker).
 
-tick(Time, SleepTime) ->
-    dgol:evolve_at(Time),
+tick(SleepTime) ->
+    dgol:evolve(),
     timer:sleep(SleepTime),
-    tick(Time + 1, SleepTime).
+    tick(SleepTime).
