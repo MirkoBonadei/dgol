@@ -92,9 +92,9 @@ handle_cast({start_cells, Xdim, Ydim, InitialCells}, State) ->
 handle_cast(init_done, State) ->
     {noreply, State};
 handle_cast({evolve_at, Time}, State) ->
+    gen_event:notify(deb, {target_time_updated, Time}),
     [cell:evolve_at(cell_locator:get({X, Y}), Time) || X <- lists:seq(0, State#state.size_x - 1),
                                                        Y <- lists:seq(0, State#state.size_y - 1)],
-    gen_event:notify(deb, {target_time_updated, Time}),
     {noreply, State#state{target_time=Time}};
 handle_cast(evolve, State) ->
     dgol:evolve_at(State#state.target_time + 1),

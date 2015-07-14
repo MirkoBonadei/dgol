@@ -19,7 +19,7 @@
 init(_) ->
     Wx = wx:new(),
     Frame = wxFrame:new(Wx, -1, "Distributed game of life", [{size, {800, 670}}]),
-    {ok, {Frame, nil, 1}}.
+    {ok, {Frame, nil, 0}}.
 
 handle_event({universe_created, Xdim, Ydim}, {Frame, _, Time}) ->
     Sz = wxBoxSizer:new(?wxVERTICAL),
@@ -64,11 +64,11 @@ handle_event({cell_born, {X, Y}, 1}, {Frame, Grid, Time}) ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid, Time}};
-handle_event({cell_evolved, {X, Y}, 0, CellTime}, {Frame, Grid, Time}) when CellTime >= Time ->
+handle_event({cell_evolved, {X, Y}, 0, Time}, {Frame, Grid, Time}) ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {255, 255, 255, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid, Time}};
-handle_event({cell_evolved, {X, Y}, 1, CellTime}, {Frame, Grid, Time}) when CellTime >= Time ->
+handle_event({cell_evolved, {X, Y}, 1, Time}, {Frame, Grid, Time}) ->
     wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
     wxGrid:forceRefresh(Grid),
     {ok, {Frame, Grid, Time}};
@@ -76,10 +76,11 @@ handle_event({cell_died, {X, Y}}, {Frame, Grid, Time}) ->
     wxFrame:setStatusText(Frame, io_lib:format("Cell {~p, ~p} is dead", [X, Y])),
     {ok, {Frame, Grid, Time}};
 handle_event({target_time_updated, Time}, {Frame, Grid, _}) ->
+    io:format(user, "target_time_updated: ~p~n", [Time]),
     wxFrame:setStatusText(Frame, io_lib:format("Time: ~p", [Time])),
     {ok, {Frame, Grid, Time}};
-handle_event(Event, State) ->
-    io:format(user, "event: ~p~n", [Event]),
+handle_event(Event, State = {_, _, Time}) ->
+    io:format(user, "event: ~p, time: ~p~n", [Event, Time]),
     {ok, State}.
 
 handle_call(_Event, State) ->
