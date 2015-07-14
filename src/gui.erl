@@ -52,6 +52,7 @@ handle_event({universe_created, Xdim, Ydim}, {Frame, _, Time}) ->
 
     wxFrame:connect(Frame, command_button_clicked),
     wxFrame:connect(Frame, grid_cell_left_dclick),
+    wxFrame:connect(Frame, close_window),
 
     wxFrame:show(Frame),
     {ok, {Frame, Grid, Time}};
@@ -105,6 +106,10 @@ handle_info(#wx{id=11, event=#wxCommand{type=command_button_clicked}}, {Frame, G
 handle_info(#wx{event=#wxGrid{type=grid_cell_left_dclick, row=X, col=Y}}, {Frame, Grid, Time}) ->
     exit(cell_locator:get({X, Y}), kill),
     {ok, {Frame, Grid, Time}};
+handle_info(#wx{event=#wxClose{type=close_window}}, State = {Frame, _Grid, _Time}) ->
+    application:stop(dgol),
+    wxFrame:destroy(Frame),
+    {ok, State};
 handle_info(Event, State) ->
     io:format(user, "~p~n", [Event]),
     {ok, State}.
