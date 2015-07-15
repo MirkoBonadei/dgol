@@ -4,8 +4,6 @@
 
 %% TODO:
 %% - far passare le celle dall'esterno
-%% - il bottone per il tick
-%% - il bottone per il kill
 
 start(Dimension) ->
     application:start(dgol),
