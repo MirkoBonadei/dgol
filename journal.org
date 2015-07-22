@@ -343,3 +343,13 @@ determinato istante temporale.
 Questo dovrebbe consentirci di mantenere il numero di processi sotto
 controllo in modo da poter poi affrontare universi con centinaia di
 migliaia di celle.
+
+** 21 Luglio 2015: la race-condition
+Oggi abbiamo trovato che il collector soffre di una race-condition,
+in quanto può capitare che la lista dei monitors ancora posseduti sia
+vuota ma in realtà non è stata effettuala la "collection" di tutti i
+processi vicini alla cella in questione.
+Dobbiamo quindi avere un'altra metrica per capire quando un collector
+ha completato la fase di collezione.
+Commit prima: #55b84dedfcbf930365c0d65cff8eb2f424ea5259
+Commit dopo: #bb0e41ea9e6e08193d7f8636375a2b8bdf18ca96
