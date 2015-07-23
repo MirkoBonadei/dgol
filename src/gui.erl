@@ -11,17 +11,19 @@
         ]).
 
 %% TODO:
-%% - dovrebbe essere impossibile selezionare più di una cella (anche con il drag del mouse)
 %% - non è il massimo andare sulla handle_info/2 per gestire gli eventi della GUI
 %% - ascoltare la morte del ticker e fare il toggle dell'auto-button
 %% - fare uno step di accensione delle celle (?)
 
-init(_) ->
+-spec init(GuiServer :: pid()) -> {ok, term()}. %% fix this
+init(GuiServer) ->
     Wx = wx:new(),
     Frame = wxFrame:new(Wx, -1, "Distributed game of life", [{size, {800, 670}}]),
-    {ok, {Frame, nil, 0}}.
+    {ok, {Frame, nil, 0, GuiServer}}.
 
-handle_event({universe_created, Xdim, Ydim}, {Frame, _, Time}) ->
+handle_event(E={universe_created, Xdim, Ydim}, {Frame, _, Time, GuiServer}) ->
+    io:format(user, "~p ~p ~n", [self(), E]),
+    gen_server:cast(GuiServer, E),
     Sz = wxBoxSizer:new(?wxVERTICAL),
     Grid = wxGrid:new(Frame, -1),
     wxGrid:createGrid(Grid, Xdim, Ydim),
@@ -76,11 +78,14 @@ handle_event({cell_died, {X, Y}}, {Frame, Grid, Time}) ->
     wxFrame:setStatusText(Frame, io_lib:format("Cell {~p, ~p} is dead", [X, Y])),
     {ok, {Frame, Grid, Time}};
 handle_event({target_time_updated, Time}, {Frame, Grid, _}) ->
-    io:format(user, "target_time_updated: ~p~n", [Time]),
+    %o:format(user, "target_time_updated: ~p~n", [Time]),
     wxFrame:setStatusText(Frame, io_lib:format("Time: ~p", [Time])),
     {ok, {Frame, Grid, Time}};
+handle_event(force_update, State = {_, Grid, _}) ->
+    wxGrid:forceRefresh(Grid),
+    {ok, State};
 handle_event(Event, State = {_, _, Time}) ->
-    io:format(user, "event: ~p, time: ~p~n", [Event, Time]),
+    %io:format(user, "event: ~p, time: ~p~n", [Event, Time]),
     {ok, State}.
 
 handle_call(_Event, State) ->
@@ -112,7 +117,7 @@ handle_info(#wx{event=#wxClose{type=close_window}}, State = {Frame, _Grid, _Time
     wxFrame:destroy(Frame),
     {ok, State};
 handle_info(Event, State) ->
-    io:format(user, "~p~n", [Event]),
+    %io:format(user, "~p~n", [Event]),
     {ok, State}.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -131,5 +136,6 @@ stop_timer() ->
 
 tick(SleepTime) ->
     dgol:evolve(),
+    %gen_event:notify(deb, force_update),
     timer:sleep(SleepTime),
     tick(SleepTime).
