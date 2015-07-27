@@ -1,141 +1,44 @@
 -module(gui).
 -behaviour(gen_event).
--include_lib("wx/include/wx.hrl").
-
 -export([init/1,
-         handle_event/2,
          handle_call/2,
+         handle_event/2,
          handle_info/2,
          code_change/3,
          terminate/2
         ]).
-
-%% TODO:
-%% - non è il massimo andare sulla handle_info/2 per gestire gli eventi della GUI
-%% - ascoltare la morte del ticker e fare il toggle dell'auto-button
-%% - fare uno step di accensione delle celle (?)
+-record(state, {gui_server :: pid()}).
 
 -spec init(GuiServer :: pid()) -> {ok, term()}. %% fix this
 init(GuiServer) ->
-    Wx = wx:new(),
-    Frame = wxFrame:new(Wx, -1, "Distributed game of life", [{size, {800, 670}}]),
-    {ok, {Frame, nil, 0, GuiServer}}.
+    {ok, #state{gui_server=GuiServer}}.
 
-handle_event(E={universe_created, Xdim, Ydim}, {Frame, _, Time, GuiServer}) ->
-    io:format(user, "~p ~p ~n", [self(), E]),
-    gen_server:cast(GuiServer, E),
-    Sz = wxBoxSizer:new(?wxVERTICAL),
-    Grid = wxGrid:new(Frame, -1),
-    wxGrid:createGrid(Grid, Xdim, Ydim),
-    wxGrid:setColMinimalAcceptableWidth(Grid, 1),
-    wxGrid:setRowMinimalAcceptableHeight(Grid, 1),
-    [wxGrid:setColSize(Grid, Col, round(780/Ydim)) || Col <- lists:seq(0, Ydim)],
-    [wxGrid:setRowSize(Grid, Row, round(580/Xdim)) || Row <- lists:seq(0, Xdim)],
-    wxGrid:setRowLabelSize(Grid, 0),
-    wxGrid:setColLabelSize(Grid, 0),
-    wxGrid:enableEditing(Grid, false),
-    wxGrid:disableDragGridSize(Grid),
-    wxGrid:disableDragColSize(Grid),
-    wxGrid:disableDragRowSize(Grid),
+handle_event(E={universe_created, _X, _Y}, S=#state{gui_server=Pid}) ->
+    gen_server:cast(Pid, E),
+    {ok, S};
+handle_event(E={cell_born, {_X, _Y}, _}, S=#state{gui_server=Pid}) ->
+    gen_server:cast(Pid, E),
+    {ok, S};
+handle_event(E={cell_evolved, {_X, _Y}, _C, _T}, S=#state{gui_server=Pid}) ->
+    gen_server:cast(Pid, E),
+    {ok, S};
+handle_event(E={cell_died, {_X, _Y}}, S=#state{gui_server=Pid}) ->
+    gen_server:cast(Pid, E),
+    {ok, S};
+handle_event(E={target_time_updated, _T}, S=#state{gui_server=Pid}) ->
+    gen_server:cast(Pid, E),
+    {ok, S};
+handle_event(_E, S) ->
+    {ok, S}.
 
-    wxFrame:createStatusBar(Frame),
-    wxFrame:setStatusText(Frame, "Ready"),
+handle_call(_E, S) ->
+    {ok, ok, S}.
 
-    Hs = wxBoxSizer:new(?wxHORIZONTAL),
-    Tick = wxButton:new(Frame, 10, [{label, "Tick"}]),
-    Auto = wxButton:new(Frame, 11, [{label, "Start"}]),
-    wxSizer:add(Hs, Tick, [{border, 4}]),
-    wxSizer:add(Hs, Auto, [{border, 4}]),
+handle_info(_E, S) ->
+    {ok, S}.
 
-    wxSizer:add(Sz, Grid, [{border, 4}]),
-    wxSizer:add(Sz, Hs, [{border, 4}]),
-    wxWindow:setSizer(Frame, Sz),
-    wxGrid:forceRefresh(Grid),
+code_change(_OldVsn, S, _Extra) ->
+    {ok, S}.
 
-    wxFrame:connect(Frame, command_button_clicked),
-    wxFrame:connect(Frame, grid_cell_left_dclick),
-    wxFrame:connect(Frame, close_window),
-
-    wxFrame:show(Frame),
-    {ok, {Frame, Grid, Time}};
-handle_event({cell_born, {X, Y}, _}, {Frame, Grid, Time}) when Time > 1 ->
-    wxGrid:setCellBackgroundColour(Grid, X, Y, {255, 0, 0, 0}),
-    wxGrid:forceRefresh(Grid),
-    {ok, {Frame, Grid, Time}};
-handle_event({cell_born, {X, Y}, 1}, {Frame, Grid, Time}) ->
-    wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
-    wxGrid:forceRefresh(Grid),
-    {ok, {Frame, Grid, Time}};
-handle_event({cell_evolved, {X, Y}, 0, Time}, {Frame, Grid, Time}) ->
-    wxGrid:setCellBackgroundColour(Grid, X, Y, {255, 255, 255, 0}),
-    wxGrid:forceRefresh(Grid),
-    {ok, {Frame, Grid, Time}};
-handle_event({cell_evolved, {X, Y}, 1, Time}, {Frame, Grid, Time}) ->
-    wxGrid:setCellBackgroundColour(Grid, X, Y, {0, 0, 0, 0}),
-    wxGrid:forceRefresh(Grid),
-    {ok, {Frame, Grid, Time}};
-handle_event({cell_died, {X, Y}}, {Frame, Grid, Time}) ->
-    wxFrame:setStatusText(Frame, io_lib:format("Cell {~p, ~p} is dead", [X, Y])),
-    {ok, {Frame, Grid, Time}};
-handle_event({target_time_updated, Time}, {Frame, Grid, _}) ->
-    %o:format(user, "target_time_updated: ~p~n", [Time]),
-    wxFrame:setStatusText(Frame, io_lib:format("Time: ~p", [Time])),
-    {ok, {Frame, Grid, Time}};
-handle_event(force_update, State = {_, Grid, _}) ->
-    wxGrid:forceRefresh(Grid),
-    {ok, State};
-handle_event(Event, State = {_, _, Time}) ->
-    %io:format(user, "event: ~p, time: ~p~n", [Event, Time]),
-    {ok, State}.
-
-handle_call(_Event, State) ->
-    %%io:format(user, "~p~n", [Event]),
-    {ok, reply, State}.
-
-handle_info(#wx{id=10, event=#wxCommand{type=command_button_clicked}}, {Frame, Grid, Time}) ->
-    dgol:evolve(),
-    {ok, {Frame, Grid, Time}};
-handle_info(#wx{id=11, event=#wxCommand{type=command_button_clicked}}, {Frame, Grid, Time}) ->
-    AutoButton = wx:typeCast(wxWindow:findWindowById(11), wxButton),
-    TickButton = wx:typeCast(wxWindow:findWindowById(10), wxButton),
-    case wxButton:getLabel(AutoButton) of
-        "Start" ->  
-            wxButton:setLabel(AutoButton, "Stop"),
-            wxButton:disable(TickButton),
-            start_timer();
-        "Stop" -> 
-            wxButton:setLabel(AutoButton, "Start"),
-            wxButton:enable(TickButton),
-            stop_timer()
-    end,
-    {ok, {Frame, Grid, Time}};
-handle_info(#wx{event=#wxGrid{type=grid_cell_left_dclick, row=X, col=Y}}, {Frame, Grid, Time}) ->
-    exit(cell_locator:get({X, Y}), kill),
-    {ok, {Frame, Grid, Time}};
-handle_info(#wx{event=#wxClose{type=close_window}}, State = {Frame, _Grid, _Time}) ->
-    application:stop(dgol),
-    wxFrame:destroy(Frame),
-    {ok, State};
-handle_info(Event, State) ->
-    %io:format(user, "~p~n", [Event]),
-    {ok, State}.
-
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
-
-terminate(_, _Frame) ->
-    wx:destroy(),
+terminate(_, _S) ->
     ok.
-
-start_timer() ->
-    register(ticker, spawn(fun() -> tick(500) end)).
-
-stop_timer() ->
-    exit(whereis(ticker), kill),
-    unregister(ticker).
-
-tick(SleepTime) ->
-    dgol:evolve(),
-    %gen_event:notify(deb, force_update),
-    timer:sleep(SleepTime),
-    tick(SleepTime).

@@ -1,7 +1,9 @@
 -module(gui_server).
 -behaviour(gen_server).
 -include_lib("wx/include/wx.hrl").
-
+%% TODO:
+%% - ascoltare la morte del ticker e fare il toggle dell'auto-button
+%% - fare uno step di accensione delle celle (?)
 -export([start/0]).
 -export([init/1,
          handle_call/3,
@@ -9,11 +11,9 @@
          handle_info/2,
          terminate/2,
          code_change/3]).
-
 -record(state, {frame=nil,
                 grid=nil,
                 time=0}).
-
 
 start() ->
     gen_server:start(?MODULE, [], []).
@@ -29,6 +29,7 @@ init(_) ->
                 grid=nil, 
                 time=0}}.
 
+%% TODO: how to disable syncronous messages?
 handle_call(_, _, _) ->
     {reply, ok, []}.
 
@@ -62,21 +63,78 @@ handle_cast({universe_created, X, Y}, S=#state{frame=F}) ->
     wxWindow:setSizer(F, Sz),
     wxGrid:forceRefresh(G),
 
-    %%wxFrame:connect(F, command_button_clicked),
-    %%wxFrame:connect(F, grid_cell_left_dclick),
-    %%wxFrame:connect(F, close_window),
+    wxFrame:connect(F, command_button_clicked),
+    wxFrame:connect(F, grid_cell_left_dclick),
+    wxFrame:connect(F, close_window),
 
     wxFrame:show(F),
     {noreply, S#state{grid=G}};
-handle_cast(E, _) ->
-    io:format(user, "~p~n", [E]),
-    {noreply, []}.
+handle_cast({cell_born, {X, Y}, _}, S=#state{grid=G,time=T}) when T > 1 ->
+    wxGrid:setCellBackgroundColour(G, X, Y, {255, 0, 0, 0}),
+    wxGrid:forceRefresh(G),
+    {noreply, S};
+handle_cast({cell_born, {X, Y}, 1}, S=#state{grid=G}) ->
+    wxGrid:setCellBackgroundColour(G, X, Y, {0, 0, 0, 0}),
+    wxGrid:forceRefresh(G),
+    {noreply, S};
+handle_cast({cell_evolved, {X, Y}, 0, T}, S=#state{grid=G,time=T}) ->
+    wxGrid:setCellBackgroundColour(G, X, Y, {255, 255, 255, 0}),
+    wxGrid:forceRefresh(G),
+    {noreply, S};
+handle_cast({cell_evolved, {X, Y}, 1, T}, S=#state{grid=G,time=T}) ->
+    wxGrid:setCellBackgroundColour(G, X, Y, {0, 0, 0, 0}),
+    wxGrid:forceRefresh(G),
+    {noreply, S};
+handle_cast({cell_died, {X, Y}}, S=#state{frame=F}) ->
+    wxFrame:setStatusText(F, io_lib:format("Cell {~p, ~p} is dead", [X, Y])),
+    {noreply, S};
+handle_cast({target_time_updated, T}, S=#state{frame=F}) ->
+    wxFrame:setStatusText(F, io_lib:format("Time: ~p", [T])),
+    {noreply, S#state{time=T}};
+handle_cast(_E, S) ->
+    {noreply, S}.
 
-handle_info(_, _) ->
-    {noreply, []}.
+handle_info(#wx{id=10,event=#wxCommand{type=command_button_clicked}}, S) ->
+    dgol:evolve(),
+    {noreply, S};
+handle_info(#wx{id=11,event=#wxCommand{type=command_button_clicked}}, S) ->
+    AutoButton = wx:typeCast(wxWindow:findWindowById(11), wxButton),
+    TickButton = wx:typeCast(wxWindow:findWindowById(10), wxButton),
+    case wxButton:getLabel(AutoButton) of
+        "Start" ->  
+            wxButton:setLabel(AutoButton, "Stop"),
+            wxButton:disable(TickButton),
+            start_timer();
+        "Stop" -> 
+            wxButton:setLabel(AutoButton, "Start"),
+            wxButton:enable(TickButton),
+            stop_timer()
+    end,
+    {noreply, S};
+handle_info(#wx{event=#wxGrid{type=grid_cell_left_dclick,row=X,col=Y}}, S) ->
+    exit(cell_locator:get({X, Y}), kill),
+    {noreply, S};
+handle_info(#wx{event=#wxClose{type=close_window}}, S=#state{frame=F}) ->
+    application:stop(dgol),
+    wxFrame:destroy(F),
+    {noreply, S};
+handle_info(_E, S) ->
+    {noreply, S}.
 
 terminate(_, _) ->
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
+
+start_timer() ->
+    register(ticker, spawn(fun() -> tick(500) end)).
+
+stop_timer() ->
+    exit(whereis(ticker), kill),
+    unregister(ticker).
+
+tick(SleepTime) ->
+    dgol:evolve(),
+    timer:sleep(SleepTime),
+    tick(SleepTime).
