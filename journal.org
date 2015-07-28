@@ -353,3 +353,9 @@ Dobbiamo quindi avere un'altra metrica per capire quando un collector
 ha completato la fase di collezione.
 Commit prima: #55b84dedfcbf930365c0d65cff8eb2f424ea5259
 Commit dopo: #bb0e41ea9e6e08193d7f8636375a2b8bdf18ca96
+
+** 28 Luglio 2015
+Mettere nel PDF che in una richiesta sincrona, restituire la tupla
+{stop, ...} fa scoppiare il client. Bisogna prima rispondere alla
+richiesta con gen_server:replsy/2 e poi è possibile restituire la
+tupla {stop, ...}.
