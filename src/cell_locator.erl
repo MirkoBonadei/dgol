@@ -1,108 +1,133 @@
+%% @doc Key-Value store to lookup a cell process pid starting 
+%% from the position of the cell.
+%%
+%% This is used as an anti-corruption layer because the rest of 
+%% the application doesn't have to care about cell's pids (because 
+%% they can vary with time) but can refer to the cells using their 
+%% positions, which are stable for all the lifetime of the application.
 -module(cell_locator).
 -behaviour(gen_server).
-
 -include_lib("eunit/include/eunit.hrl").
 
-%% API
--export([start_link/0
-        ,stop/0
-        ,put/2
-        ,get/1
-        ,wait_for/2
-        ,wait_for_all/2]).
+-export([start_link/0,
+         stop/0,
+         put/2,
+         get/1,
+         wait_for/2,
+         wait_for_all/2]).
 
-%% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
+-export([init/1, 
+         handle_call/3, 
+         handle_cast/2, 
+         handle_info/2,
+         terminate/2, 
+         code_change/3]).
 
 -define(SERVER, ?MODULE).
+-record(state, {pids,
+                positions}).
 
--record(state, {pids
-               ,positions}).
+%% API functions
 
+%% @doc Starts a cell_locator process and registers it locally.
+-spec start_link() -> {ok, pid()} | 
+                      ignore | 
+                      {error, already_started} |
+                      {error, term()}.
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
--spec put(cell:position(), pid()) -> ok.
-put(Position, Pid) ->
-    gen_server:call(?SERVER, {put, Position, Pid}).
+%% @doc Inserts or updates the pid for a cell position.
+-spec put(Pos :: cell:position(), Pid :: pid()) -> ok.
+put(Pos, Pid) ->
+    gen_server:call(?SERVER, {put, Pos, Pid}).
 
--spec get(cell:position()) -> pid() | {error, not_found}.
-get(Position) ->
-    gen_server:call(?SERVER, {get, Position}).
+%% @doc Gets the pid for a cell position.
+-spec get(Pos :: cell:position()) -> pid() | {error, not_found}.
+get(Pos) ->
+    gen_server:call(?SERVER, {get, Pos}).
 
+%% @doc Stops the cell_locator.
 -spec stop() -> ok.
 stop() ->
     gen_server:call(?SERVER, stop).
 
--spec wait_for(Position :: cell:position(), Timeout :: timeout()) -> ok | timeout.
-wait_for(_, Timeout) when Timeout =< 0 ->
+%% @doc Waits for a cell to be registered on the cell_locator process.
+%% It waits until the timeout (in milliseconds) is reached or the cell
+%% is registered.
+-spec wait_for(Pos :: cell:position(), T :: timeout()) -> ok | timeout.
+wait_for(_, T) when T =< 0 ->
     timeout;
-wait_for(Position, Timeout) ->
-    case cell_locator:get(Position) of
+wait_for(Pos, T) ->
+    case cell_locator:get(Pos) of
         {error, not_found} -> 
             timer:sleep(10),
-            cell_locator:wait_for(Position, Timeout - 10);
+            cell_locator:wait_for(Pos, T - 10);
         Pid when is_pid(Pid) ->
             ok
     end.
 
--spec wait_for_all(Positions :: [cell:position(), ...], Timeout :: timeout()) -> ok | timeout.
+%% @doc Waits for all the cells in the list to be registered on the cell_locator 
+%% process.
+%% It waits until the timeout (in milliseconds) is reached or all the cells are 
+%% registered.
+-spec wait_for_all(PosList :: [cell:position(), ...], T :: timeout()) -> 
+                          ok | timeout.
 wait_for_all([], _) ->
     ok;
-wait_for_all([H|T], Timeout) ->
-    case cell_locator:wait_for(H, Timeout) of
+wait_for_all([CellPos|OtherPos], T) ->
+    case cell_locator:wait_for(CellPos, T) of
         timeout ->
             timeout;
         ok ->
-            cell_locator:wait_for_all(T, Timeout)
+            cell_locator:wait_for_all(OtherPos, T)
     end.
+
+%% gen_server callbacks
 
 init([]) ->
-    {ok, #state{pids=gb_trees:empty()
-               ,positions=gb_trees:empty()}}.
+    {ok, #state{pids=gb_trees:empty(),
+                positions=gb_trees:empty()}}.
 
-handle_call({get, Position}, _From, State) ->
-    case gb_trees:lookup(Position, State#state.pids) of
+handle_call({get, Pos}, _From, S) ->
+    case gb_trees:lookup(Pos, S#state.pids) of
         {value, Value} ->
-            {reply, Value, State};
+            {reply, Value, S};
         none ->
-            {reply, {error, not_found}, State}
+            {reply, {error, not_found}, S}
     end;
-handle_call({put, Position, Pid}, _From, State) ->
+handle_call({put, Pos, Pid}, _From, S) ->
     erlang:monitor(process, Pid),
-    UpdatedPids = gb_trees:enter(Position, Pid, State#state.pids),
-    UpdatedPositions = gb_trees:enter(Pid, Position, State#state.positions),
-    {reply, ok, State#state{pids=UpdatedPids,
-                            positions=UpdatedPositions}};
-handle_call(stop, From, State) ->
-    %% synch termination can only be done with a sync reply handled by the 
-    %% user
-    %% TODO: tell to someone
+    Pids = gb_trees:enter(Pos, Pid, S#state.pids),
+    Positions = gb_trees:enter(Pid, Pos, S#state.positions),
+    {reply, ok, S#state{pids=Pids,
+                        positions=Positions}};
+handle_call(stop, From, S) ->
     gen_server:reply(From, ok),
-    {stop, normal, State}.
+    {stop, normal, S}.
 
-handle_cast(_Request, State) ->
-    {noreply, State}.
+handle_cast(_Req, S) ->
+    {noreply, S}.
 
-handle_info({'DOWN', _Ref, process, Pid, _Reason}, State) ->
-    case gb_trees:lookup(Pid, State#state.positions) of
-        {value, Position} ->
-            UpdatedPids = gb_trees:delete(Position, State#state.pids),
-            UpdatedPositions = gb_trees:delete(Pid, State#state.positions),
-            gen_event:notify(deb, {cell_died, Position}),
-            {noreply, #state{pids=UpdatedPids
-                            ,positions=UpdatedPositions}};
+handle_info({'DOWN', _Ref, process, Pid, _Reason}, S) ->
+    case gb_trees:lookup(Pid, S#state.positions) of
+        {value, Pos} ->
+            Pids = gb_trees:delete(Pos, S#state.pids),
+            Positions = gb_trees:delete(Pid, S#state.positions),
+            gen_event:notify(deb, {cell_died, Pos}),
+            {noreply, #state{pids=Pids,
+                             positions=Positions}};
         none ->
-            {noreply, State}
+            {noreply, S}
     end.
 
-terminate(_Reason, _State) ->
+terminate(_Reason, _S) ->
     ok.
 
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+code_change(_OldVsn, S, _Extra) ->
+    {ok, S}.
 
+%% tests
 -ifdef(TEST).
 
 all_tests_test_() ->
