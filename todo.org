@@ -9,7 +9,8 @@
    il Ref del DOWN
 ** TODO [collector] usa keytake invece che keyfind e subtract
    - State "TODO"       from ""           [2015-03-30 lun 09:02]
-** TODO Sistemare Dialyzer
+** ONGOING Sistemare Dialyzer
+   - State "ONGOING"    from "TODO"       [2015-07-29 mer 08:37]
    - State "TODO"       from ""           [2015-04-29 mer 08:10]
 ** DONE dgol:evolve/0 è utile e fattibile
    CLOSED: [2015-07-14 mar 08:27]
@@ -21,8 +22,12 @@
 ** TODO fare release
    - State "TODO"       from ""           [2015-07-13 lun 08:47]
 
-** TODO scrivere un outline per il PDF
+** ONGOING scrivere un outline per il PDF
+   - State "ONGOING"    from "TODO"       [2015-07-29 mer 08:37]
    - State "TODO"       from ""           [2015-07-13 lun 08:48]
 
 ** TODO Gui con il processo
    - State "TODO"       from ""           [2015-07-14 mar 08:19]
+
+** TODO c'è un todo in cell e bisogna gestire la visibilità dei tipi
+   - State "TODO"       from ""           [2015-07-29 mer 08:38]
