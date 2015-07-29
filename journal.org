@@ -359,3 +359,9 @@ Mettere nel PDF che in una richiesta sincrona, restituire la tupla
 {stop, ...} fa scoppiare il client. Bisogna prima rispondere alla
 richiesta con gen_server:replsy/2 e poi è possibile restituire la
 tupla {stop, ...}.
+
+** TODO sistemare i tipi (rendere qualcosa opaque)
+   - State "TODO"       from ""           [2015-07-28 mar 18:28]
+
+** TODO chiedi se sia utile o meno standardizzare i tipi di ritorno del gen_server
+   - State "TODO"       from ""           [2015-07-28 mar 18:29]
