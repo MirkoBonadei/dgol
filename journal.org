@@ -365,3 +365,9 @@ tupla {stop, ...}.
 
 ** TODO chiedi se sia utile o meno standardizzare i tipi di ritorno del gen_server
    - State "TODO"       from ""           [2015-07-28 mar 18:29]
+
+** ONGOING Supervision trees
+   - State "ONGOING"    from "TODO"       [2015-08-04 mar 14:01]
+   - State "TODO"       from ""           [2015-08-04 mar 14:01]
+
+*** simple_one_for_one per cell_sup?
