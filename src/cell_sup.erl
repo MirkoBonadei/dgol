@@ -1,7 +1,7 @@
 -module(cell_sup).
 -behaviour(supervisor).
 
--export([start_link/2,
+-export([start_link/1,
          start_cell/2]).
 -export([init/1]).
 
