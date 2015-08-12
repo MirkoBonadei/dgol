@@ -1,33 +1,50 @@
 dgol - Distributed Game Of Life
 =====
 
-This my try to implement a distributed game of life, on the path showed by Torben Hoffman [here](https://github.com/lehoff/egol).
+dgol - Distributed Game Of Life
+=====
 
-Checklist
----------
-- [ ] The `dgol` process is not under the root supervisor. This could be a problem because a crash of the given process should cause the termination of the game;
-- [ ] The `dgol` process should be a `gen_fsm` because it is based on the state (for example the async initialization which uses the state to leave the server in a pending state `#state{mode=not_started}`);
-- [ ] Write some good tests to avoid regression on the startup of a `dgol` session (is it true that the `cell_sup` is supervising NxN processes?, ecc...);
-- [ ] Introduce the `cell_mgr` process to decouple the coordinates of a cell from the pid that reppresent that cell;
-- [ ] write the next steps :-)
+This project is an implementation of the [Game of life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) done by [Gabriele Lana](https://github.com/gabrielelana) and me during the last months. 
 
-Open a shell the the last source compiled and in the path
------
+We took it as a "toy project" to explore all the nontrivial decisions that need to be made when you have to program a distributed system (eg: choose the right supervision strategy, how to make sub-systems communicate each other, how to store data to make it fault tolerant, ecc...).
 
-    $ ./rebar3 shell
+It is inspired by the [Torben Hoffman's version](https://github.com/lehoff/egol) and on the talk [Thinking like an Erlanger](https://www.youtube.com/watch?v=6sBL1kHoMoo).
 
-Starting the application
-------------------------
-```erl
-Erlang/OTP 17 [erts-6.0] [source-07b8f44] [64-bit] [smp:8:8] [async-threads:0] [kernel-poll:false]
+The project is still under development, at the moment we are doing a huge refacroting of the codebase because we are reorganizing the supervision strategy.
 
-Eshell V6.0  (abort with ^G)
-1> application:start(dgol).
-ok
-2> dgol:start(3, 3, [{1, 1}, {1, 2}]).
-{ok,<0.73.0>}
+There is nice interface (developed with [wxWidgets](http://www.erlang.org/doc/apps/wx/chapter.html)) to visually test the project:
+
+It is possible to start a demonstration with:
+Note that the first parameter of `demo:start/2` is the dimension of the universe and the second parameter is a list of cells alive at the time 0.
+```erlang
+demo:start(30, [{15, 15},{14,15},{16,15}]).
+```
+<img src="https://github.com/MirkoBonadei/dgol/blob/master/doc/dgol_1.png" width="400">
+
+Clicking on "tick" makes the univese time advance by one tick while clicking on "start" makes the univese time ticking at a constant rate (until "stop" is clicked).
+
+<img src="https://github.com/MirkoBonadei/dgol/blob/master/doc/dgol_2.png" width="400">
+
+Killing cells is really easy, it only requires a double click on the condemned cell. The cell will chage its color to red until it will have recovered and will not be at par with the other cells.
+
+<img src="https://github.com/MirkoBonadei/dgol/blob/master/doc/dgol_3.png" width="400">
+
+When it happens everything will go on normally.
+
+<img src="https://github.com/MirkoBonadei/dgol/blob/master/doc/dgol_4.png" width="400">
+
+### How to use it
+To compile code:
+```
+./rebar3 compile
 ```
 
-Application overview
---------------------
-![dgol application](https://github.com/MirkoBonadei/dgol/blob/master/doc/application.png)
+To run tests:
+```
+./rebar3 eunit
+```
+
+To start a shell and try to play:
+```
+./rebar3 shell
+```
