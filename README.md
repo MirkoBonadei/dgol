@@ -1,9 +1,6 @@
 dgol - Distributed Game Of Life
 =====
 
-dgol - Distributed Game Of Life
-=====
-
 This project is an implementation of the [Game of life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) done by [Gabriele Lana](https://github.com/gabrielelana) and me during the last months. 
 
 We took it as a "toy project" to explore all the nontrivial decisions that need to be made when you have to program a distributed system (eg: choose the right supervision strategy, how to make sub-systems communicate each other, how to store data to make it fault tolerant, ecc...).
