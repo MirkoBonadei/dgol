@@ -20,7 +20,7 @@ start_cell(Position, Dimensions, InitialContent) ->
 
 init([]) ->
     RestartStrategy = one_for_one,
-    MaxRestarts = 1000,
+    MaxRestarts = 100000,
     MaxSecondsBetweenRestarts = 1,
     SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
     {ok, {SupFlags, []}}.
