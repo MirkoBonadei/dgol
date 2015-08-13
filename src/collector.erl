@@ -105,43 +105,43 @@ collect_cell(CollectorPid, Position) ->
     gen_server:cast(CollectorPid, {collect_cell, Position}).
 
 %% Tests
-% -ifdef(TEST).
+-ifdef(TEST).
 
-% start_dgol() ->
-%     meck:new(dgol),
-%     meck:expect(dgol, target_time, fun() -> 0 end),
-%     cell_locator:start_link(),
-%     gen_event:start_link({local, deb}),
-%     gen_event:add_handler(deb, recorder, []).
+start_dgol() ->
+    meck:new(universe),
+    meck:expect(universe, target_time, fun() -> 0 end),
+    cell_locator:start_link(),
+    gen_event:start_link({local, deb}),
+    gen_event:add_handler(deb, recorder, []).
 
-% stop_dgol(_) ->
-%     meck:unload(dgol),
-%     gen_event:stop(deb),
-%     cell_locator:stop().
+stop_dgol(_) ->
+    meck:unload(universe),
+    gen_event:stop(deb),
+    cell_locator:stop().
 
-% all_tests_test_() ->
-%     {inorder, {foreach,
-%      fun start_dgol/0,
-%      fun stop_dgol/1,
-%      [
-%       fun colletor_is_able_to_collect_neighbours_content/0]}}.
+all_tests_test_() ->
+    {inorder, {foreach,
+     fun start_dgol/0,
+     fun stop_dgol/1,
+     [
+      fun colletor_is_able_to_collect_neighbours_content/0]}}.
 
-% colletor_is_able_to_collect_neighbours_content() ->
-%     Self = self(),
-%     {ok, _} = cell:start_link({1, 1}, {3, 3}, 1),
-%     {ok, _} = cell:start_link({1, 2}, {3, 3}, 0),
-%     collector:start_link(
-%       TimeToCollect = 0,
-%       [{1, 1}, {1, 2}],
-%       fun(TimeCollected, NeighboursAlive) ->
-%               Self ! {collected, TimeCollected, NeighboursAlive}
-%       end),
-%     receive
-%         {collected, T, N} ->
-%             ?assertEqual(TimeToCollect, T),
-%             ?assertEqual(1, N)
-%     after 50 ->
-%             throw(test_failed)
-%     end.
+colletor_is_able_to_collect_neighbours_content() ->
+    Self = self(),
+    {ok, _} = cell:start_link({3, 3}, {1, 1}, 1),
+    {ok, _} = cell:start_link({3, 3}, {1, 2}, 0),
+    collector:start_link(
+      TimeToCollect = 0,
+      [{1, 1}, {1, 2}],
+      fun(TimeCollected, NeighboursAlive) ->
+              Self ! {collected, TimeCollected, NeighboursAlive}
+      end),
+    receive
+        {collected, T, N} ->
+            ?assertEqual(TimeToCollect, T),
+            ?assertEqual(1, N)
+    after 50 ->
+            throw(test_failed)
+    end.
 
-% -endif.
+-endif.
