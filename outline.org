@@ -16,6 +16,21 @@
    Evidenziare le scelte più importanti cercando di ricordare gli
    "errori" fatti.
 
+   Ricordarsi di parlare della scelta della strategia di supervisione.
+   Soprattutto cogliere l'occasione per fare una panoramica ulteriore
+   sulle varie RestartStrategy, con un occhio di riguardo per la
+   simple_one_for_one, la quale non e' banale perche' esce dagli
+   schemi e non e' per nulla simile alle altre 3 strategie.
+
+   La simple_one_for_one ha riceve come ChildSpec dei template, i
+   quali verranno poi arricchiti dalla lista di argomenti passata
+   come secondo parametro alla supervisor:start_child/2. Nota che
+   solo per la simple_one_for_one questo accade. Infatti di solito il
+   secondo parametro della supervisor:start_child/2 e' una specifica
+   completa che indica un figlio aggiunto dinamicamente.
+   Nella simple_one_for_one i figli sono tutti dinamici ma la
+   specifica e' una sola ed e' il template creato nella init/1.
+
 ** Testing
 
 ** Release
