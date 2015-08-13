@@ -7,10 +7,10 @@ start(Dimension, StartingCells) ->
     gui_server:start(),
     %% TODO: remove the 4th parameter from the start_session function
     %%       it seems that it is now useless
-    dgol:start_session(Dimension, 
-                       Dimension, 
-                       StartingCells,
-                       []).
-    
+    dgol:start_universe(Dimension,
+                        Dimension,
+                        StartingCells,
+                        []).
+
 stop() ->
     application:stop(dgol).

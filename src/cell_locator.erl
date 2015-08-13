@@ -1,9 +1,9 @@
-%% @doc Key-Value store to lookup a cell process pid starting 
+%% @doc Key-Value store to lookup a cell process pid starting
 %% from the position of the cell.
 %%
-%% This is used as an anti-corruption layer because the rest of 
-%% the application doesn't have to care about cell's pids (because 
-%% they can vary with time) but can refer to the cells using their 
+%% This is used as an anti-corruption layer because the rest of
+%% the application doesn't have to care about cell's pids (because
+%% they can vary with time) but can refer to the cells using their
 %% positions, which are stable for all the lifetime of the application.
 -module(cell_locator).
 -behaviour(gen_server).
@@ -16,11 +16,11 @@
          wait_for/2,
          wait_for_all/2]).
 
--export([init/1, 
-         handle_call/3, 
-         handle_cast/2, 
+-export([init/1,
+         handle_call/3,
+         handle_cast/2,
          handle_info/2,
-         terminate/2, 
+         terminate/2,
          code_change/3]).
 
 -define(SERVER, ?MODULE).
@@ -30,8 +30,8 @@
 %% API functions
 
 %% @doc Starts a cell_locator process and registers it locally.
--spec start_link() -> {ok, pid()} | 
-                      ignore | 
+-spec start_link() -> {ok, pid()} |
+                      ignore |
                       {error, already_started} |
                       {error, term()}.
 start_link() ->
@@ -60,18 +60,18 @@ wait_for(_, T) when T =< 0 ->
     timeout;
 wait_for(Pos, T) ->
     case cell_locator:get(Pos) of
-        {error, not_found} -> 
+        {error, not_found} ->
             timer:sleep(10),
             cell_locator:wait_for(Pos, T - 10);
         Pid when is_pid(Pid) ->
             ok
     end.
 
-%% @doc Waits for all the cells in the list to be registered on the cell_locator 
+%% @doc Waits for all the cells in the list to be registered on the cell_locator
 %% process.
-%% It waits until the timeout (in milliseconds) is reached or all the cells are 
+%% It waits until the timeout (in milliseconds) is reached or all the cells are
 %% registered.
--spec wait_for_all(PosList :: [cell:position(), ...], T :: timeout()) -> 
+-spec wait_for_all(PosList :: [cell:position(), ...], T :: timeout()) ->
                           ok | timeout.
 wait_for_all([], _) ->
     ok;
@@ -131,7 +131,7 @@ code_change(_OldVsn, S, _Extra) ->
 -ifdef(TEST).
 
 all_tests_test_() ->
-    {inorder, {foreach, 
+    {inorder, {foreach,
                fun setup_locator/0,
                fun teardown_locator/1,
                [
@@ -142,13 +142,13 @@ all_tests_test_() ->
                ]}}.
 
 setup_locator() ->
-    meck:new(dgol),
-    meck:expect(dgol, target_time, fun() -> 0 end),
+    meck:new(universe),
+    meck:expect(universe, target_time, fun() -> 0 end),
     gen_event:start_link({local, deb}),
     cell_locator:start_link().
 
 teardown_locator(_) ->
-    meck:unload(dgol),
+    meck:unload(universe),
     gen_event:stop(deb),
     cell_locator:stop().
 
@@ -156,18 +156,18 @@ cell_not_found() ->
     ?assertEqual({error, not_found}, cell_locator:get({1, 2})).
 
 cell_found() ->
-    {ok, CellPid} = cell:start_link({1, 2}, {3, 3}, 1),
+    {ok, CellPid} = cell:start_link({3, 3}, {1, 2}, 1),
     cell_locator:put({1, 2}, CellPid),
     ?assertEqual(CellPid, cell_locator:get({1, 2})).
 
 cell_update() ->
-    {ok, CellPid} = cell:start_link({1, 2}, {3, 3}, 1),
+    {ok, CellPid} = cell:start_link({3, 3}, {1, 2}, 1),
     ?assertEqual(ok, cell_locator:put({1, 2}, CellPid)),
     ?assertEqual(ok, cell_locator:put({1, 2}, CellPid)).
 
 cell_location_is_removed_when_monitored_process_goes_down() ->
     process_flag(trap_exit, true),
-    {ok, CellPid} = cell:start_link({1, 2}, {3, 3}, 1),
+    {ok, CellPid} = cell:start_link({3, 3}, {1, 2}, 1),
     ?assertEqual(ok, cell_locator:put({1, 2}, CellPid)),
     exit(CellPid, kill),
     ?assertNot(erlang:is_process_alive(CellPid)),

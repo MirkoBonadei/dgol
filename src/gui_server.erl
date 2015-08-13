@@ -20,13 +20,13 @@ start() ->
 
 init(_) ->
     Wx = wx:new(),
-    Frame = wxFrame:new(Wx, 
+    Frame = wxFrame:new(Wx,
                         -1,
-                        "Distributed game of life", 
+                        "Distributed game of life",
                         [{size, {800, 670}}]),
     gen_event:add_handler(deb, gui, self()),
-    {ok, #state{frame=Frame, 
-                grid=nil, 
+    {ok, #state{frame=Frame,
+                grid=nil,
                 time=0}}.
 
 %% TODO: how to disable syncronous messages?
@@ -95,17 +95,17 @@ handle_cast(_E, S) ->
     {noreply, S}.
 
 handle_info(#wx{id=10,event=#wxCommand{type=command_button_clicked}}, S) ->
-    dgol:evolve(),
+    universe:evolve(),
     {noreply, S};
 handle_info(#wx{id=11,event=#wxCommand{type=command_button_clicked}}, S) ->
     AutoButton = wx:typeCast(wxWindow:findWindowById(11), wxButton),
     TickButton = wx:typeCast(wxWindow:findWindowById(10), wxButton),
     case wxButton:getLabel(AutoButton) of
-        "Start" ->  
+        "Start" ->
             wxButton:setLabel(AutoButton, "Stop"),
             wxButton:disable(TickButton),
             start_timer();
-        "Stop" -> 
+        "Stop" ->
             wxButton:setLabel(AutoButton, "Start"),
             wxButton:enable(TickButton),
             stop_timer()
@@ -135,6 +135,6 @@ stop_timer() ->
     unregister(ticker).
 
 tick(SleepTime) ->
-    dgol:evolve(),
+    universe:evolve(),
     timer:sleep(SleepTime),
     tick(SleepTime).
