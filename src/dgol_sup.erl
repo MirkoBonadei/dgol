@@ -19,7 +19,7 @@ start_universe(XDim, YDim, InitialCells, EventHandlers) ->
 
 %%% OTP callbacks
 init([]) ->
-    RestartStrategy = {one_for_rest, 0, 1},
+    RestartStrategy = {rest_for_one, 0, 1},
     DomainEventBus = {deb, {gen_event, start_link, [{local, deb}]},
                       permanent, 1000, worker, [dynamic]},
     {ok, {RestartStrategy, [DomainEventBus]}}.

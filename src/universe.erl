@@ -60,7 +60,7 @@ handle_cast({evolve_at, Time}, State) ->
                                                        Y <- lists:seq(0, State#state.size_y - 1)],
     {noreply, State#state{target_time=Time}};
 handle_cast(evolve, State) ->
-    dgol:evolve_at(State#state.target_time + 1),
+    universe:evolve_at(State#state.target_time + 1),
     {noreply, State}.
 
 handle_info(_Request, State) ->
@@ -79,16 +79,16 @@ start_cells(Xd, Yd, InitialCells, DgolPid) ->
     AllCells = [{X, Y} || X <- lists:seq(0, Xd - 1),
                           Y <- lists:seq(0, Yd - 1)],
     lists:foreach(fun(Pos) ->
-                          start_cell(Pos, {Xd, Yd}, lists:member(Pos, InitialCells))
+                          start_cell(Pos, lists:member(Pos, InitialCells))
                   end,
                   AllCells),
     gen_server:cast(DgolPid, init_done).
 
--spec start_cell(cell:position(), cell:dimensions(), boolean()) -> pid().
-start_cell(Position, Dimensions, true) ->
-    {ok, Pid} = cell_sup:start_cell(Position, Dimensions, 1),
+-spec start_cell(cell:position(), boolean()) -> pid().
+start_cell(Position, true) ->
+    {ok, Pid} = cell_sup:start_cell(Position, 1),
     Pid;
-start_cell(Position, Dimensions, false) ->
-    {ok, Pid} = cell_sup:start_cell(Position, Dimensions, 0),
+start_cell(Position, false) ->
+    {ok, Pid} = cell_sup:start_cell(Position, 0),
     Pid.
 

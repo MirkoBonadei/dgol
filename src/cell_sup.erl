@@ -11,15 +11,12 @@ start_link(Dimensions) ->
 
 -spec start_cell(cell:position(), cell:content()) -> supervisor:startchild_ret().
 start_cell(Position, InitialContent) ->
-    Cell = {{cell, Position}, {cell, start_link, [Position, InitialContent]},
-            transient, infinity, worker, [cell]},
-    {ok, _} = supervisor:start_child(?MODULE, Cell).
+    supervisor:start_child(?MODULE, [Position, InitialContent]).
 
 %%% OTP supervisor callback
 
-init([{XDim, YDim}]) ->
-    RestartStrategy = simple_one_for_one,
-    MaxRestarts = XDim * YDim,
-    MaxSecondsBetweenRestarts = 1,
-    SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
-    {ok, {SupFlags, []}}.
+init([{Xd, Yd}]) ->
+    RestartStrategy = {simple_one_for_one, Xd * Yd, 1},
+    CellTemplate = {cell, {cell, start_link, [{Xd, Yd}]},
+                    transient, infinity, worker, [cell]},
+    {ok, {RestartStrategy, [CellTemplate]}}.
